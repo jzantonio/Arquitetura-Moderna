@@ -3,3 +3,7 @@ Thumbs.db
 *.log
 node_modules/
 .env
+
+# geradores: entrada e intermediários
+tools/input/
+tools/work/
