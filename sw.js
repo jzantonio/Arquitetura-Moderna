@@ -1,5 +1,5 @@
 // FIAMS campo · service worker: guarda o app no aparelho para abrir sem internet.
-const V = 'fiams-v1';
+const V = 'fiams-v2';
 const CORE = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/config.js', 'js/logic.js', 'js/schema.js', 'js/store.js', 'js/ui.js', 'js/form.js', 'js/editor.js', 'js/sup.js',
   'vendor/preact-htm.js', 'vendor/supabase.js', 'vendor/591.supabase.js', 'vendor/chart.umd.js', 'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];

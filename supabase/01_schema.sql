@@ -250,3 +250,37 @@ revoke execute on function public.guard_status() from public, anon, authenticate
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.is_supervisor() from public, anon;
 grant execute on function public.is_supervisor() to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 8. Cadastro somente com Google institucional (@undb.edu.br)
+-- ---------------------------------------------------------------------
+create or replace function public.enforce_undb_google()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.email is null or lower(new.email) !~ '^[^@[:space:]]+@undb\.edu\.br$' then
+    raise exception 'Cadastro restrito a contas @undb.edu.br.';
+  end if;
+  if coalesce(new.raw_app_meta_data->>'provider','') <> 'google' then
+    raise exception 'O cadastro é feito somente com a conta Google institucional.';
+  end if;
+  return new;
+end $$;
+revoke execute on function public.enforce_undb_google() from public, anon, authenticated;
+drop trigger if exists enforce_undb_google on auth.users;
+create trigger enforce_undb_google before insert on auth.users
+  for each row execute function public.enforce_undb_google();
+
+-- nome vem do Google (full_name / name)
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, email, nome, role)
+  values (
+    new.id, new.email,
+    coalesce(new.raw_user_meta_data->>'nome', new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''),
+    case when exists (select 1 from public.supervisores s where lower(s.email) = lower(new.email))
+         then 'supervisor' else 'aluno' end)
+  on conflict (id) do nothing;
+  return new;
+end $$;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;

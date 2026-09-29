@@ -15,40 +15,34 @@ function useRoute() {
 }
 
 // ---------------------------------------------------------------- login
+function authErrorFromUrl() {
+  const q = new URLSearchParams(location.search); const h = new URLSearchParams(location.hash.replace(/^#\/?/, ''));
+  const err = q.get('error_description') || h.get('error_description') || q.get('error') || h.get('error');
+  if (!err) return '';
+  history.replaceState(null, '', location.pathname + '#/');
+  return /database error|restrito|somente|undb/i.test(err)
+    ? `Só é possível entrar com uma conta Google ${CONFIG.DOMINIO}. Escolha sua conta institucional.`
+    : 'Não foi possível entrar: ' + err.replace(/\+/g, ' ');
+}
 function Login() {
-  const [mode, setMode] = useState('entrar');
-  const [email, setEmail] = useState(''); const [pw, setPw] = useState(''); const [nome, setNome] = useState('');
-  const [busy, setBusy] = useState(false); const [msg, setMsg] = useState('');
-  const submit = async (e) => {
-    e.preventDefault(); setBusy(true); setMsg('');
-    try {
-      if (mode === 'entrar') await api.signIn(email, pw);
-      else if (mode === 'criar') { const r = await api.signUp(email, pw, nome); if (r.needsConfirm) setMsg('Conta criada. Abra o e-mail de confirmação enviado para ' + email + ' e depois entre.'); }
-      else { await api.resetPassword(email); setMsg('Se o e-mail estiver cadastrado, você receberá um link para criar nova senha.'); }
-    } catch (er) { setMsg(traduz(er.message || String(er))); } finally { setBusy(false); }
-  };
+  const [email, setEmail] = useState(''); const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(authErrorFromUrl);
+  const google = async () => { setBusy(true); setMsg(''); try { await api.signInGoogle(); } catch (er) { setMsg(er.message || String(er)); setBusy(false); } };
+  const demo = async (e) => { e.preventDefault(); await api.signIn(email); };
   return html`<div class="login">
     <div class="login-art" aria-hidden="true"></div>
     <div class="login-card">
       <div class="brand big"><${Cobogo} pct=${100} size=${44} /><div><b>FIAMS campo</b><span>Inventário da Arquitetura Moderna de São Luís · 1930–1970</span></div></div>
       <p class="lead">Coleta de dados em campo para a Ficha de Inventário da Arquitetura Moderna de São Luís. Monte Castelo, João Paulo e Filipinho.</p>
-      ${DEMO && html`<div class="banner info">Modo demonstração: os dados ficam só neste navegador. Para usar com a turma, configure o Supabase em <code>js/config.js</code>. Qualquer senha funciona; entre com <b>${CONFIG.SUPERVISORES[0]}</b> para ver a supervisão.</div>`}
-      <form onSubmit=${submit}>
-        ${mode === 'criar' && html`<label>Nome completo<input required value=${nome} onInput=${(e) => setNome(e.target.value)} autocomplete="name" /></label>`}
-        <label>E-mail<input type="email" required value=${email} onInput=${(e) => setEmail(e.target.value)} autocomplete="email" placeholder=${CONFIG.DOMINIO_SUGERIDO ? 'seu.nome' + CONFIG.DOMINIO_SUGERIDO : ''} /></label>
-        ${mode !== 'senha' && html`<label>Senha<input type="password" required=${!DEMO} minlength=${DEMO ? 0 : 6} value=${pw} onInput=${(e) => setPw(e.target.value)} autocomplete=${mode === 'criar' ? 'new-password' : 'current-password'} /></label>`}
-        ${msg && html`<p class="msg">${msg}</p>`}
-        <button class="btn primary full" disabled=${busy}>${busy ? 'Aguarde…' : mode === 'entrar' ? 'Entrar' : mode === 'criar' ? 'Criar conta' : 'Enviar link'}</button>
-      </form>
-      <div class="login-alt">
-        ${mode !== 'entrar' && html`<button class="link" onClick=${() => setMode('entrar')}>Já tenho conta</button>`}
-        ${mode !== 'criar' && html`<button class="link" onClick=${() => setMode('criar')}>Criar conta de aluno</button>`}
-        ${mode === 'entrar' && !DEMO && html`<button class="link" onClick=${() => setMode('senha')}>Esqueci a senha</button>`}
-      </div>
+      ${DEMO ? html`<div class="banner info">Modo demonstração: os dados ficam só neste navegador. Entre com <b>${CONFIG.SUPERVISORES[0]}</b> para ver a supervisão.</div>
+        <form onSubmit=${demo}><label>E-mail<input type="email" required value=${email} onInput=${(e) => setEmail(e.target.value)} /></label><button class="btn primary full">Entrar (demonstração)</button></form>`
+      : html`${msg && html`<p class="msg" role="alert">${msg}</p>`}
+        <button class="btn google full" disabled=${busy} onClick=${google}>
+          <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.2 7-10.3 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.600 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.500 0 11.900-2.100 15.900-5.800l-7.6-5.900c-2.100 1.400-4.800 2.300-8.300 2.300-6.300 0-11.600-4-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z"/></svg>
+          ${busy ? 'Abrindo o Google…' : 'Entrar com Google'}</button>
+        <p class="hint center">Acesso restrito a contas <b>${CONFIG.DOMINIO}</b>.</p>`}
       <p class="foot">LUPA · Centro Universitário UNDB</p>
     </div></div>`;
 }
-const traduz = (m) => /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /Email not confirmed/i.test(m) ? 'Confirme seu e-mail antes de entrar (veja a caixa de entrada).' : /already registered/i.test(m) ? 'Este e-mail já tem conta. Use "Já tenho conta".' : /Password should be/i.test(m) ? 'A senha precisa ter pelo menos 6 caracteres.' : m;
 
 // ---------------------------------------------------------------- perfil
 function ProfileForm({ profile, onSaved, first }) {
@@ -58,7 +52,7 @@ function ProfileForm({ profile, onSaved, first }) {
   return html`<form class="card form" onSubmit=${save}>
     ${first && html`<h2>Antes de começar</h2><p class="hint">Estes dados identificam você na ficha (seção 25) e no painel da supervisão.</p>`}
     <label>Nome completo<input required value=${p.nome} onInput=${(e) => setP({ ...p, nome: e.target.value })} /></label>
-    <label>Turma / disciplina<input value=${p.turma} onInput=${(e) => setP({ ...p, turma: e.target.value })} placeholder="Ex.: Estúdio Urbano 2026.2" /></label>
+    <label>Turma / disciplina<input required=${!!first && profile.role !== 'supervisor'} value=${p.turma} onInput=${(e) => setP({ ...p, turma: e.target.value })} placeholder="Ex.: Estúdio Urbano 2026.2" /></label>
     <label>Matrícula<input value=${p.matricula} onInput=${(e) => setP({ ...p, matricula: e.target.value })} /></label>
     <p class="hint">E-mail: ${profile.email} · Perfil: ${profile.role === 'supervisor' ? 'supervisão' : 'aluno'}</p>
     <button class="btn primary" disabled=${busy}>${first ? 'Começar' : 'Salvar'}</button></form>`;
@@ -199,11 +193,15 @@ function App() {
     api.getSession().then(setSession).catch(() => setSession(null));
     api.onAuth((s) => { setSession(s); if (!s) setProfile(null); });
   }, []);
+  useEffect(() => {
+    const em = session?.user?.email;
+    if (em && !DEMO && !em.toLowerCase().endsWith(CONFIG.DOMINIO)) { api.signOut(); toast(`Somente contas ${CONFIG.DOMINIO} podem usar o app.`, 'err'); }
+  }, [session?.user?.id]);
   useEffect(() => { if (session) api.getProfile().then(setProfile).catch((e) => toast('Perfil não encontrado: ' + e.message, 'err')); }, [session?.user?.id]);
   let body;
   if (session === undefined || (session && !profile)) body = html`<div class="splash"><${Cobogo} pct=${100} size=${56} /><p>FIAMS campo</p></div>`;
   else if (!session) body = html`<${Login} />`;
-  else if (!profile.nome) body = html`<div class="page narrow"><${ProfileForm} profile=${profile} onSaved=${setProfile} first /></div>`;
+  else if (!profile.nome || (profile.role !== 'supervisor' && !profile.turma)) body = html`<div class="page narrow"><${ProfileForm} profile=${profile} onSaved=${setProfile} first /></div>`;
   else body = html`<${Shell} profile=${profile} setProfile=${setProfile} route=${route} />`;
   return html`${body}<${Toaster} />`;
 }

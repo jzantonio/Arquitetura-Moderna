@@ -340,3 +340,7 @@ h3.sub { font-size: .98rem; margin: .8rem 0 .4rem; color: var(--azulejo-2); }
 .tbl-inv td.code { white-space: nowrap; }
 .tbl-inv td { padding: .55rem .5rem; border-bottom: 1px solid var(--concreto-2); vertical-align: top; }
 .panel:has(.tbl-inv) { overflow-x: auto; }
+
+.btn.google { background: #fff; border-color: var(--linha-forte); color: var(--grafite); font-weight: 650; min-height: 52px; margin-top: .4rem; }
+.btn.google:hover:not(:disabled) { background: #F7F8F6; }
+.hint.center { text-align: center; margin-top: .8rem; }

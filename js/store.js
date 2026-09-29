@@ -60,19 +60,19 @@ const idb = {
 // BACKEND SUPABASE
 // =============================================================================
 function supabaseBackend() {
-  const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+  const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, flowType: 'pkce' } });
   const ok = ({ data, error }) => { if (error) throw error; return data; };
   let me = null;
   return {
     mode: 'supabase',
     async getSession() { const { data } = await sb.auth.getSession(); me = data.session?.user || null; return data.session; },
     onAuth(fn) { sb.auth.onAuthStateChange((_e, s) => { me = s?.user || null; fn(s); }); },
-    async signIn(email, password) { ok(await sb.auth.signInWithPassword({ email, password })); },
-    async signUp(email, password, nome) {
-      const r = ok(await sb.auth.signUp({ email, password, options: { data: { nome }, emailRedirectTo: location.origin + location.pathname } }));
-      return { needsConfirm: !r.session };
+    // Login somente pela conta Google institucional (o banco recusa qualquer outro cadastro)
+    async signInGoogle() {
+      ok(await sb.auth.signInWithOAuth({ provider: 'google', options: {
+        redirectTo: location.origin + location.pathname,
+        queryParams: { hd: CONFIG.DOMINIO.replace(/^@/, ''), prompt: 'select_account' } } }));
     },
-    async resetPassword(email) { ok(await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname })); },
     async signOut() { await sb.auth.signOut(); },
     uid: () => me?.id,
     async getProfile() { return ok(await sb.from('profiles').select('*').eq('id', me.id).single()); },

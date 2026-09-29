@@ -62,7 +62,20 @@ git push -u origin main
 4. Em **Authentication → URL Configuration**:
    - **Site URL:** o endereço do app (passo 4), por exemplo `https://SEU-USUARIO.github.io/fiams-campo/`
    - **Redirect URLs:** adicione o mesmo endereço.
-5. Opcional, para agilizar a primeira aula: em **Authentication → Providers → Email**, desative *Confirm email*. Assim os alunos entram sem precisar confirmar o e-mail.
+5. Configure o login com Google (próxima seção). O cadastro por e-mail e senha não é usado.
+
+#### Login com Google (somente @undb.edu.br)
+
+O app só entra pela conta Google institucional. A regra é imposta pelo banco (`01_schema.sql`, gatilho `enforce_undb_google`): qualquer cadastro que não venha do Google ou que não seja `@undb.edu.br` é recusado, mesmo que alguém tente burlar a tela.
+
+1. Em console.cloud.google.com, crie um projeto (ex.: "FIAMS campo") e abra **APIs e serviços → Tela de consentimento OAuth**. Tipo de usuário: **Interno**, se a conta UNDB for Google Workspace (limita a organização). Se só existir "Externo", o bloqueio por domínio do banco continua valendo.
+2. Em **Credenciais → Criar credenciais → ID do cliente OAuth**, escolha **Aplicativo da Web**.
+3. Em **URIs de redirecionamento autorizados**, cole exatamente: `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`
+4. Copie o **ID do cliente** e a **chave secreta do cliente**.
+5. No Supabase, abra **Authentication → Sign In / Providers → Google**, ative, cole os dois valores e salve.
+6. Ainda em **Sign In / Providers**, desative **Email** (não é usado). Não é obrigatório, porque o banco já recusa.
+
+**Supervisores (acesso total):** `jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`. Ao entrar pela primeira vez com Google, a conta já nasce como supervisora. Para alterar a lista, edite a tabela `supervisores` no Supabase (Table Editor); vale para novas contas.
 
 ### 3. Ligar o app ao banco
 
@@ -92,10 +105,10 @@ Observação: o GitHub Pages é gratuito para repositórios **públicos**. Para 
 
 ## Uso
 
-**Supervisores** (`jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`): criem conta no app com esses e-mails. O menu **Supervisão** aparece automaticamente. Para mudar a lista, edite a tabela `supervisores` no Supabase (Table Editor) e rode a última instrução `update` de `01_schema.sql`.
+**Supervisores** (`jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`): entrem com **Entrar com Google**. O menu **Supervisão** aparece automaticamente.
 
 **Alunos:**
-1. Abrem o link no celular e criam conta com o e-mail institucional.
+1. Abrem o link no celular e tocam em **Entrar com Google**, usando o e-mail institucional `@undb.edu.br`. No primeiro acesso informam a turma.
 2. Instalam o app: no Android, pelo menu ⋮ → *Instalar app*; no iPhone, pelo botão Compartilhar → *Adicionar à Tela de Início*.
 3. Em **Imóveis**, escolhem o bem e tocam em **Iniciar ficha**.
 
@@ -111,4 +124,4 @@ Edite os arquivos no GitHub (ou envie um novo commit). O GitHub Pages republica 
 
 ## Modo demonstração
 
-Enquanto `js/config.js` estiver sem as chaves, o app funciona em modo demonstração, com os dados guardados só no navegador. Serve para testar e apresentar. Entrando com `jose.lopes@undb.edu.br`, qualquer senha funciona e o menu de supervisão aparece.
+Enquanto `js/config.js` estiver sem as chaves, o app funciona em modo demonstração, com os dados guardados só no navegador. Serve para testar e apresentar. Nesse modo, entrar com `jose.lopes@undb.edu.br` (sem senha) mostra o menu de supervisão.
