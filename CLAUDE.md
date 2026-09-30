@@ -44,6 +44,7 @@ Tabelas: `supervisores`, `profiles`, `imoveis`, `fichas`, `revisoes`, `fotos`, m
 
 ## Regras da ficha (não mudar sem o usuário)
 
+- **Recorte temporal 1930–1980** (decidido pelo usuário em 30/09/2026; antes era 1930–1970). Lista `PER` do 4.2: décadas até "1970–1979" e "1980". Os 8 imóveis dos anos 1970 deixaram de ter alerta "fora do recorte". Os arquivos gerados foram ajustados por script Node (sem Python nem Inventário v4 à mão), reproduzindo o que `fill.py`/`build_ficha.py` corrigidos gerariam.
 - Ordem numérica da FIAMS, em 7 etapas (A a G). Seção 0 "Visita de campo" vem do Roteiro de campo.
 - **Sem travas rígidas.** Lógica de salto suave: campo "não se aplica" some da conta (ex.: sem acesso ao interior oculta 8.2.2–8.2.5). Filtro Tudo/Campo/Documental/Análise = "modo campo".
 - Única trava: **enviar à supervisão** exige 10 itens essenciais (`essentials()` em `logic.js`), incluindo GPS capturado em campo (não geocodificação) e foto da fachada principal.
@@ -63,7 +64,7 @@ Tabelas: `supervisores`, `profiles`, `imoveis`, `fichas`, `revisoes`, `fotos`, m
 Feito: banco e regras no Supabase; 86 imóveis carregados; app publicado; regra de cadastro só-Google no banco; código de login com Google escrito e testado em modo demonstração.
 
 Pendente, em ordem:
-1. **Fazer commit e push** das alterações desta pasta (login com Google, README, SQL, `sw.js` v2). O GitHub ainda tem a versão com login por e-mail e senha.
+1. **Fazer commit e push** das alterações desta pasta (login com Google, README, SQL, recorte 1930–1980, `sw.js` v3). Esta cópia (em Downloads) não é um repositório git: é preciso copiá-la para um clone do repositório. O GitHub ainda tem a versão com login por e-mail e senha.
 2. **Login com Google (ação do usuário):** criar o ID de cliente OAuth no Google Cloud Console, com redirecionamento `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`, e colar ID e chave secreta em Supabase → Authentication → Sign In / Providers → Google. A chave secreta é credencial: quem cola é o usuário. Depois desativar o provedor Email.
 3. Em Supabase → Authentication → URL Configuration, o Site URL e o Redirect URL já são o endereço do GitHub Pages. Se o Netlify for usado, adicionar o endereço dele também.
 4. **Testar de ponta a ponta** com uma conta real: entrar com Google como `jose.lopes@undb.edu.br`, conferir que o papel virou `supervisor` (`select email, role from profiles`), abrir "Cine Monte Castelo", iniciar ficha, preencher, recarregar, enviar foto, enviar à supervisão, revisar como supervisor.

@@ -36,7 +36,8 @@ def periodo(y):
     if 1940<=y<=1949: return "1940–1949"
     if 1950<=y<=1959: return "1950–1959"
     if 1960<=y<=1969: return "1960–1969"
-    if y==1970: return "1970"
+    if 1970<=y<=1979: return "1970–1979"
+    if y==1980: return "1980"
     return None
 GENERIC=re.compile(r'^(Residência( da | de | \(|$)(?!família)|Casa da |Escola$|Posto de Gasolina|Vila Militar)')
 NEWSP=['Imparcial','Correio','Pacotilha','Jornal','Novidades','O Dia']
@@ -214,10 +215,9 @@ for rec in recs:
     if y:
         p=periodo(y)
         if p: put("4.2",p,f"Derivado da data registrada ({y})")
-        elif y>1970:
-            srcnote("4.2",f"Data registrada ({y}) POSTERIOR ao recorte temporal 1930–1970 — verificar critério de inclusão"); alerts.append(f"fora do recorte temporal ({y})")
+        elif y>1980:
+            srcnote("4.2",f"Data registrada ({y}) POSTERIOR ao recorte temporal 1930–1980 — verificar critério de inclusão"); alerts.append(f"fora do recorte temporal ({y})")
         elif y<1930: srcnote("4.2",f"Data ({y}) anterior ao recorte")
-    elif dt and "1970" in str(dt): srcnote("4.2","Déc. 1970 — verificar enquadramento no recorte (1930–1970)"); alerts.append("déc. 1970 (recorte)")
     # 5
     if obs: put("5.1.1",obs,"Transcrição do campo OBS. do "+INV+" — redigir como síntese crítica; divergências a manter explícitas")
     if "5.2.3" not in o and logr and any(k in logr for k in ("Getúlio Vargas","João Pessoa")):

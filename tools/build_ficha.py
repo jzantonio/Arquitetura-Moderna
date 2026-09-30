@@ -44,7 +44,7 @@ LISTS={
  "AUT":["Sim","Provável","Atribuição","Desconhecida"],
  "NATC":["Pública","Privada","Religiosa","Empresarial","Outra"],
  "VETOR":["Egressos da Escola Técnica","Obras públicas (DER-MA)","Produção de Cleon Furtado","Projeto importado (escritório externo)","Não identificado","Outro"],
- "PER":["1930–1939","1940–1949","1950–1959","1960–1969","1970"],
+ "PER":["1930–1939","1940–1949","1950–1959","1960–1969","1970–1979","1980"],
  "CERT":["Confirmado (fonte primária)","Provável (fonte secundária)","Estimado (análise formal)","Depoimento oral"],
  "COMP":["Sim","Parcialmente","Não"],
  "FORMA":["Regular","Irregular","Triangular","Trapezoidal","Outra"],
@@ -105,7 +105,7 @@ for k,v in widths.items(): ws.column_dimensions[k].width=v
 ws.column_dimensions["G"].hidden=True
 ws.sheet_view.showGridLines=False
 
-ws.merge_cells("A1:F1"); ws["A1"]="FIAMS — FICHA DE INVENTÁRIO DA ARQUITETURA MODERNA DE SÃO LUÍS (1930–1970)"
+ws.merge_cells("A1:F1"); ws["A1"]="FIAMS — FICHA DE INVENTÁRIO DA ARQUITETURA MODERNA DE SÃO LUÍS (1930–1980)"
 ws["A1"].font=F(14,True,"FFFFFF"); ws["A1"].fill=fill(C_TITLE); ws["A1"].alignment=Alignment(vertical="center",indent=1); ws.row_dimensions[1].height=30
 ws.merge_cells("A2:F2"); ws["A2"]="Instrumento de identificação, documentação, avaliação patrimonial e monitoramento  ·  Monte Castelo, João Paulo e Filipinho  ·  Nível 1 — Ficha de inventário"
 ws["A2"].font=F(9,False,"FFFFFF",True); ws["A2"].fill=fill(C_SEC); ws["A2"].alignment=Alignment(vertical="center",indent=1); ws.row_dimensions[2].height=18
@@ -571,7 +571,7 @@ field("28.5","Prioridade de conservação",ANA,dv="ABCDE")
 field("28.6","Prioridade de pesquisa",ANA,dv="ABCDE")
 field("28.7","Prioridade de monitoramento",ANA,dv="ABCDE")
 LAST=r-1
-note("FIAMS — Ficha de Inventário da Arquitetura Moderna de São Luís (1930–1970). Adaptação temática e crítica dos referenciais INBI/INBI-SU e SICG/IPHAN, complementados pelas fichas DOCOMOMO e pelas experiências brasileiras de inventariação da arquitetura moderna. Não constitui reprodução de formulário oficial do IPHAN.",30)
+note("FIAMS — Ficha de Inventário da Arquitetura Moderna de São Luís (1930–1980). Adaptação temática e crítica dos referenciais INBI/INBI-SU e SICG/IPHAN, complementados pelas fichas DOCOMOMO e pelas experiências brasileiras de inventariação da arquitetura moderna. Não constitui reprodução de formulário oficial do IPHAN.",30)
 
 # painel de preenchimento (linha 4)
 rg=lambda L:f"${L}$6:${L}${LAST}"
@@ -804,7 +804,7 @@ for k,v in {"A":24,"B":26,"C":42,"D":20,"E":13}.items(): D_.column_dimensions[k]
 A=ws0; A.sheet_view.showGridLines=False
 A.column_dimensions["A"].width=3; A.column_dimensions["B"].width=30; A.column_dimensions["C"].width=95
 A.merge_cells("B2:C2"); A["B2"]="FIAMS"; A["B2"].font=F(26,True,"FFFFFF"); A["B2"].fill=fill(C_TITLE); A["B2"].alignment=Alignment(indent=1,vertical="center"); A.row_dimensions[2].height=44
-A.merge_cells("B3:C3"); A["B3"]="Ficha de Inventário da Arquitetura Moderna de São Luís (1930–1970)"; A["B3"].font=F(13,True,"FFFFFF"); A["B3"].fill=fill(C_TITLE); A["B3"].alignment=Alignment(indent=1,vertical="center"); A.row_dimensions[3].height=24
+A.merge_cells("B3:C3"); A["B3"]="Ficha de Inventário da Arquitetura Moderna de São Luís (1930–1980)"; A["B3"].font=F(13,True,"FFFFFF"); A["B3"].fill=fill(C_TITLE); A["B3"].alignment=Alignment(indent=1,vertical="center"); A.row_dimensions[3].height=24
 A.merge_cells("B4:C4"); A["B4"]="Inventário de Identificação, Documentação, Avaliação e Monitoramento do Acervo Modernista de São Luís"; A["B4"].font=F(10,False,"FFFFFF",True); A["B4"].fill=fill(C_SEC); A["B4"].alignment=Alignment(indent=1,vertical="center"); A.row_dimensions[4].height=20
 ar=6
 def ahead(t):
@@ -820,7 +820,7 @@ def arow(k,v,h=None,kfill=None,kfont=None):
 ahead("IDENTIFICAÇÃO DO INSTRUMENTO")
 arow("Instrumento","Ficha individual de bem imóvel")
 arow("Natureza","Inventário temático de arquitetura moderna")
-arow("Recorte temporal","1930–1970")
+arow("Recorte temporal","1930–1980")
 arow("Recorte territorial","Bairros de Monte Castelo (Retiro Natal, Fátima, Vila Passos, Belira, Canto da Fabril, Apeadouro, Alemanha, Coreia, Vila Ivar Saldanha), João Paulo e Filipinho, no município de São Luís, Maranhão")
 arow("Base metodológica","INBI/INBI-SU/IPHAN + SICG/IPHAN + DOCOMOMO + experiências brasileiras de inventariação da arquitetura moderna analisadas por Guedes")
 arow("Finalidade","Identificação, documentação, interpretação, avaliação patrimonial e monitoramento das transformações do acervo moderno")

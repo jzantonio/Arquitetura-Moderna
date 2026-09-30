@@ -31,7 +31,7 @@ function Login() {
   return html`<div class="login">
     <div class="login-art" aria-hidden="true"></div>
     <div class="login-card">
-      <div class="brand big"><${Cobogo} pct=${100} size=${44} /><div><b>FIAMS campo</b><span>Inventário da Arquitetura Moderna de São Luís · 1930–1970</span></div></div>
+      <div class="brand big"><${Cobogo} pct=${100} size=${44} /><div><b>FIAMS campo</b><span>Inventário da Arquitetura Moderna de São Luís · 1930–1980</span></div></div>
       <p class="lead">Coleta de dados em campo para a Ficha de Inventário da Arquitetura Moderna de São Luís. Monte Castelo, João Paulo e Filipinho.</p>
       ${DEMO ? html`<div class="banner info">Modo demonstração: os dados ficam só neste navegador. Entre com <b>${CONFIG.SUPERVISORES[0]}</b> para ver a supervisão.</div>
         <form onSubmit=${demo}><label>E-mail<input type="email" required value=${email} onInput=${(e) => setEmail(e.target.value)} /></label><button class="btn primary full">Entrar (demonstração)</button></form>`
