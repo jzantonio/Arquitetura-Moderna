@@ -36,7 +36,7 @@ Modo demonstração: se `SUPABASE_URL`/`SUPABASE_ANON_KEY` em `js/config.js` est
 
 Tabelas: `supervisores`, `profiles`, `imoveis`, `fichas`, `revisoes`, `fotos`, mais o bucket privado `fotos`. RLS em tudo. O aluno só vê as próprias fichas; supervisor vê tudo; só supervisor aprova ou devolve (gatilho `guard_status`).
 
-- **Cadastro só por Google e só `@undb.edu.br`**, imposto no banco pelo gatilho `enforce_undb_google` em `auth.users`. Não remova nem afrouxe. Não peça para desativar a confirmação de e-mail e nunca coloque a chave `service_role` no repositório.
+- **Cadastro só por Google, qualquer domínio**, imposto no banco pelo gatilho `enforce_google` em `auth.users`. A restrição a `@undb.edu.br` foi retirada a pedido do usuário em 30/09/2026 (banco e app). Não afrouxe o "só Google" sem o usuário. Não peça para desativar a confirmação de e-mail e nunca coloque a chave `service_role` no repositório.
 - Supervisores (super adm): `jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`, definidos na tabela `supervisores`; o papel é atribuído na criação da conta.
 - As migrações foram aplicadas direto no projeto pelo MCP do Supabase. Os arquivos `supabase/*.sql` são a fonte de verdade para recriar. Se mudar o banco, atualize também o `01_schema.sql`.
 - A tabela `imoveis` tem os 86 imóveis **sem** o campo `seed` (pré-preenchimento). O app busca em `data/seed.json` quando o banco vem sem ele (`getImovelSeed` em `store.js`). O botão "Carregar / atualizar" na Supervisão grava o seed completo.
@@ -61,15 +61,14 @@ Tabelas: `supervisores`, `profiles`, `imoveis`, `fichas`, `revisoes`, `fotos`, m
 
 ## Estado atual e pendências
 
-Feito: banco e regras no Supabase; 86 imóveis carregados; app publicado; regra de cadastro só-Google no banco; código de login com Google escrito e testado em modo demonstração.
+Feito: banco e regras no Supabase; 86 imóveis carregados; app publicado; regra de cadastro só-Google no banco; código de login com Google escrito e testado em modo demonstração; recorte 1930–1980 e cadastro aberto a qualquer conta Google publicados (30/09/2026).
 
 Pendente, em ordem:
-1. **Fazer commit e push** das alterações desta pasta (login com Google, README, SQL, recorte 1930–1980, `sw.js` v3). Esta cópia (em Downloads) não é um repositório git: é preciso copiá-la para um clone do repositório. O GitHub ainda tem a versão com login por e-mail e senha.
-2. **Login com Google (ação do usuário):** criar o ID de cliente OAuth no Google Cloud Console, com redirecionamento `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`, e colar ID e chave secreta em Supabase → Authentication → Sign In / Providers → Google. A chave secreta é credencial: quem cola é o usuário. Depois desativar o provedor Email.
-3. Em Supabase → Authentication → URL Configuration, o Site URL e o Redirect URL já são o endereço do GitHub Pages. Se o Netlify for usado, adicionar o endereço dele também.
-4. **Testar de ponta a ponta** com uma conta real: entrar com Google como `jose.lopes@undb.edu.br`, conferir que o papel virou `supervisor` (`select email, role from profiles`), abrir "Cine Monte Castelo", iniciar ficha, preencher, recarregar, enviar foto, enviar à supervisão, revisar como supervisor.
-5. Decidir sobre o Netlify (publicar aqui ou apagar o site vazio). Se publicar, o site vem com login SSO desativado.
-6. Opcional: gravar o `seed` completo no banco (botão na Supervisão), depois de testar o login.
+1. **Login com Google (ação do usuário):** criar o ID de cliente OAuth no Google Cloud Console, com redirecionamento `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`, e colar ID e chave secreta em Supabase → Authentication → Sign In / Providers → Google. A chave secreta é credencial: quem cola é o usuário. Depois desativar o provedor Email.
+2. Em Supabase → Authentication → URL Configuration, o Site URL e o Redirect URL já são o endereço do GitHub Pages. Se o Netlify for usado, adicionar o endereço dele também.
+3. **Testar de ponta a ponta** com uma conta real: entrar com Google como `jose.lopes@undb.edu.br`, conferir que o papel virou `supervisor` (`select email, role from profiles`), abrir "Cine Monte Castelo", iniciar ficha, preencher, recarregar, enviar foto, enviar à supervisão, revisar como supervisor.
+4. Decidir sobre o Netlify (publicar aqui ou apagar o site vazio). Se publicar, o site vem com login SSO desativado.
+5. Opcional: gravar o `seed` completo no banco (botão na Supervisão), depois de testar o login.
 
 ## Testes
 

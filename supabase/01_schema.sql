@@ -252,23 +252,22 @@ revoke execute on function public.is_supervisor() from public, anon;
 grant execute on function public.is_supervisor() to authenticated;
 
 -- ---------------------------------------------------------------------
--- 8. Cadastro somente com Google institucional (@undb.edu.br)
+-- 8. Cadastro somente com conta Google (qualquer domínio)
 -- ---------------------------------------------------------------------
-create or replace function public.enforce_undb_google()
+drop trigger if exists enforce_undb_google on auth.users;
+drop function if exists public.enforce_undb_google();
+create or replace function public.enforce_google()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.email is null or lower(new.email) !~ '^[^@[:space:]]+@undb\.edu\.br$' then
-    raise exception 'Cadastro restrito a contas @undb.edu.br.';
-  end if;
-  if coalesce(new.raw_app_meta_data->>'provider','') <> 'google' then
-    raise exception 'O cadastro é feito somente com a conta Google institucional.';
+  if new.email is null or coalesce(new.raw_app_meta_data->>'provider','') <> 'google' then
+    raise exception 'O cadastro é feito somente com uma conta Google.';
   end if;
   return new;
 end $$;
-revoke execute on function public.enforce_undb_google() from public, anon, authenticated;
-drop trigger if exists enforce_undb_google on auth.users;
-create trigger enforce_undb_google before insert on auth.users
-  for each row execute function public.enforce_undb_google();
+revoke execute on function public.enforce_google() from public, anon, authenticated;
+drop trigger if exists enforce_google on auth.users;
+create trigger enforce_google before insert on auth.users
+  for each row execute function public.enforce_google();
 
 -- nome vem do Google (full_name / name)
 create or replace function public.handle_new_user()

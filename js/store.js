@@ -67,11 +67,11 @@ function supabaseBackend() {
     mode: 'supabase',
     async getSession() { const { data } = await sb.auth.getSession(); me = data.session?.user || null; return data.session; },
     onAuth(fn) { sb.auth.onAuthStateChange((_e, s) => { me = s?.user || null; fn(s); }); },
-    // Login somente pela conta Google institucional (o banco recusa qualquer outro cadastro)
+    // Login somente por conta Google (o banco recusa qualquer outro cadastro)
     async signInGoogle() {
       ok(await sb.auth.signInWithOAuth({ provider: 'google', options: {
         redirectTo: location.origin + location.pathname,
-        queryParams: { hd: CONFIG.DOMINIO.replace(/^@/, ''), prompt: 'select_account' } } }));
+        queryParams: { prompt: 'select_account' } } }));
     },
     async signOut() { await sb.auth.signOut(); },
     uid: () => me?.id,

@@ -64,11 +64,11 @@ git push -u origin main
    - **Redirect URLs:** adicione o mesmo endereço.
 5. Configure o login com Google (próxima seção). O cadastro por e-mail e senha não é usado.
 
-#### Login com Google (somente @undb.edu.br)
+#### Login com Google
 
-O app só entra pela conta Google institucional. A regra é imposta pelo banco (`01_schema.sql`, gatilho `enforce_undb_google`): qualquer cadastro que não venha do Google ou que não seja `@undb.edu.br` é recusado, mesmo que alguém tente burlar a tela.
+O app só entra por conta Google, pessoal ou institucional (qualquer domínio). A regra é imposta pelo banco (`01_schema.sql`, gatilho `enforce_google`): qualquer cadastro que não venha do Google é recusado, mesmo que alguém tente burlar a tela. Qualquer pessoa com conta Google que tenha o link pode se cadastrar como aluno; o aluno só vê as próprias fichas, e só os e-mails da tabela `supervisores` têm acesso à supervisão.
 
-1. Em console.cloud.google.com, crie um projeto (ex.: "FIAMS campo") e abra **APIs e serviços → Tela de consentimento OAuth**. Tipo de usuário: **Interno**, se a conta UNDB for Google Workspace (limita a organização). Se só existir "Externo", o bloqueio por domínio do banco continua valendo.
+1. Em console.cloud.google.com, crie um projeto (ex.: "FIAMS campo") e abra **APIs e serviços → Tela de consentimento OAuth**. Tipo de usuário: **Externo** (o tipo "Interno" limitaria o acesso às contas de uma organização).
 2. Em **Credenciais → Criar credenciais → ID do cliente OAuth**, escolha **Aplicativo da Web**.
 3. Em **URIs de redirecionamento autorizados**, cole exatamente: `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`
 4. Copie o **ID do cliente** e a **chave secreta do cliente**.
@@ -108,7 +108,7 @@ Observação: o GitHub Pages é gratuito para repositórios **públicos**. Para 
 **Supervisores** (`jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`): entrem com **Entrar com Google**. O menu **Supervisão** aparece automaticamente.
 
 **Alunos:**
-1. Abrem o link no celular e tocam em **Entrar com Google**, usando o e-mail institucional `@undb.edu.br`. No primeiro acesso informam a turma.
+1. Abrem o link no celular e tocam em **Entrar com Google**, com qualquer conta Google. No primeiro acesso informam nome e turma.
 2. Instalam o app: no Android, pelo menu ⋮ → *Instalar app*; no iPhone, pelo botão Compartilhar → *Adicionar à Tela de Início*.
 3. Em **Imóveis**, escolhem o bem e tocam em **Iniciar ficha**.
 
