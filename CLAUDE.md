@@ -61,14 +61,12 @@ Tabelas: `supervisores`, `profiles`, `imoveis`, `fichas`, `revisoes`, `fotos`, m
 
 ## Estado atual e pendências
 
-Feito: banco e regras no Supabase; 86 imóveis carregados; app publicado; regra de cadastro só-Google no banco; código de login com Google escrito e testado em modo demonstração; recorte 1930–1980 e cadastro aberto a qualquer conta Google publicados (30/09/2026).
+Feito: banco e regras no Supabase; 86 imóveis carregados; app publicado; regra de cadastro só-Google no banco; código de login com Google escrito e testado em modo demonstração; recorte 1930–1980 e cadastro aberto a qualquer conta Google publicados (30/09/2026). Login com Google ATIVO desde 30/09/2026: projeto Google Cloud `fiams-campo` (conta joseantonioarq@gmail.com), app OAuth Externo e Em produção, cliente Web com retorno no callback do Supabase; provedor Email desativado no Supabase. Testado de ponta a ponta com jose.lopes@undb.edu.br (papel supervisor, ficha pré-preenchida, salvar/recarregar, menu Supervisão). A chave secreta do cliente fica só no Supabase. A política de privacidade é `privacidade.html` (exigida pelo Google; linkada no rodapé do login). O `pages.yml` publica uma lista fixa de arquivos: arquivo novo na raiz precisa entrar no `cp`.
 
 Pendente, em ordem:
-1. **Login com Google (ação do usuário):** criar o ID de cliente OAuth no Google Cloud Console, com redirecionamento `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`, e colar ID e chave secreta em Supabase → Authentication → Sign In / Providers → Google. A chave secreta é credencial: quem cola é o usuário. Depois desativar o provedor Email.
-2. Em Supabase → Authentication → URL Configuration, o Site URL e o Redirect URL já são o endereço do GitHub Pages. Se o Netlify for usado, adicionar o endereço dele também.
-3. **Testar de ponta a ponta** com uma conta real: entrar com Google como `jose.lopes@undb.edu.br`, conferir que o papel virou `supervisor` (`select email, role from profiles`), abrir "Cine Monte Castelo", iniciar ficha, preencher, recarregar, enviar foto, enviar à supervisão, revisar como supervisor.
-4. Decidir sobre o Netlify (publicar aqui ou apagar o site vazio). Se publicar, o site vem com login SSO desativado.
-5. Opcional: gravar o `seed` completo no banco (botão na Supervisão), depois de testar o login.
+1. Decidir sobre o Netlify (publicar aqui ou apagar o site vazio). Se publicar, adicionar o endereço em Supabase → Authentication → URL Configuration.
+2. Opcional: gravar o `seed` completo no banco (botão na Supervisão).
+3. Testar com uma conta de aluno (Gmail qualquer): perfil com turma, ficha, foto, envio à supervisão e revisão (devolver/aprovar).
 
 ## Testes
 
