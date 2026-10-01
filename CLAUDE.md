@@ -10,7 +10,7 @@ Plataforma do **Inventário da Arquitetura Moderna de São Luís (1930–1980)**
 - **Área da equipe** (`/campo/`): PWA de coleta da **Ficha FIAMS** (celular/tablet/desktop), supervisão (revisar, devolver, aprovar) e administração (publicar no portal, papéis, textos).
 
 Endereços e serviços:
-- Plataforma (Netlify): https://arquitetura-moderna-slz.netlify.app — site `arquitetura-moderna-slz`, id `3908b0d8-3500-4973-8eeb-14112664244c`. Publica a pasta `site/` (`netlify.toml`, sem build).
+- Plataforma (Netlify): https://arquitetura-moderna-slz.netlify.app — site `arquitetura-moderna-slz`, id `3908b0d8-3500-4973-8eeb-14112664244c`, conta Netlify joseantonioarq@gmail.com (time "joseantonioarq"; a outra conta, do time da UNDB, não tem acesso). Publica a pasta `site/` (`netlify.toml`, sem build). **Ligada ao GitHub desde 30/09/2026: cada push na `main` publica sozinho** (app da Netlify instalado só no repositório Arquitetura-Moderna).
 - Repositório: https://github.com/jzantonio/Arquitetura-Moderna (público). Clone local em `C:\Users\Jose Antonio\Downloads\fiams-campo\repo`.
 - GitHub Pages (`jzantonio.github.io/Arquitetura-Moderna/`): só redireciona para a Netlify (`github-pages/`, `.github/workflows/pages.yml`).
 - Supabase: projeto **Arquitetura Moderna SLZ**, id `mbaojesxkkwnjpmjgcqj`, URL `https://mbaojesxkkwnjpmjgcqj.supabase.co`. Site URL e Redirect URL: `https://arquitetura-moderna-slz.netlify.app/campo/` (o endereço do GitHub Pages continua na lista, para a transição).
@@ -18,9 +18,9 @@ Endereços e serviços:
 
 ## Publicar uma mudança
 
-1. Commit e push na `main` (o push não publica a Netlify sozinho enquanto o repositório não estiver ligado a ela).
-2. Publicar na Netlify: MCP da Netlify, `deploy-site` com o siteId acima; ele devolve um comando `npx -y @netlify/mcp@latest --site-id … --proxy-path …` para rodar na raiz do repositório.
-3. Conferir com `curl` as páginas no ar.
+1. Commit e push na `main`: a Netlify publica sozinha em cerca de 1 minuto.
+2. Conferir o deploy (MCP da Netlify, `get-project`) e as páginas no ar com `curl`.
+3. Plano B, se a ligação falhar: MCP da Netlify, `deploy-site`, que devolve um comando `npx -y @netlify/mcp@latest --site-id … --proxy-path …` para rodar na raiz do repositório.
 
 ## Stack e estrutura
 
@@ -80,10 +80,9 @@ Tabelas: `profiles`, `papeis`, `imoveis`, `fichas`, `revisoes`, `fotos`, `conteu
 Feito (30/09/2026): plataforma publicada na Netlify (portal + área da equipe); banco com perfis, publicação, leitura pública e textos (`03_plataforma.sql`, aplicado e testado como anon e como admin numa transação desfeita); login com Google ativo e testado com jose.lopes@undb.edu.br; GitHub Pages redirecionando para a Netlify.
 
 Pendente:
-1. Ligar o repositório do GitHub à Netlify (publicação automática a cada push). Exige o usuário autorizar o app da Netlify no GitHub.
-2. Primeira ficha real aprovada e publicada: conferir a página pública com fotos.
-3. Testar com uma conta de aluno (Gmail qualquer): perfil, ficha, foto, envio, revisão.
-4. Opcional: domínio próprio (ex.: inventario.lupa…); se mudar, atualizar Supabase (URLs) e Google (branding e domínios).
+1. Primeira ficha real aprovada e publicada: conferir a página pública com fotos.
+2. Testar com uma conta de aluno (Gmail qualquer): perfil, ficha, foto, envio, revisão.
+3. Opcional: domínio próprio (ex.: inventario.lupa…); se mudar, atualizar Supabase (URLs) e Google (branding e domínios).
 
 ## Testes
 

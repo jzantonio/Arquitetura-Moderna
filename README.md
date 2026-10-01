@@ -83,7 +83,7 @@ github-pages/                 endereço antigo: redireciona para a Netlify
 ## Atualizar
 
 1. Edite os arquivos em `site/`. Se mudar algo da área da equipe, aumente a versão na primeira linha útil de `site/campo/sw.js` (`fiams-vN`) para os celulares baixarem a nova versão.
-2. Envie ao GitHub e publique na Netlify. Se o repositório estiver ligado à Netlify, a publicação é automática a cada envio.
+2. Envie ao GitHub (branch `main`). A Netlify está ligada ao repositório e publica sozinha em cerca de um minuto.
 
 ## Modo demonstração
 
