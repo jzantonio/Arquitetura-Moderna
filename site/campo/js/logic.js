@@ -23,6 +23,17 @@ export const STATUS = {
   aprovada: { label: 'Aprovada', cls: 'st-aprovada' },
 };
 
+// ---------------------------------------------------------------- perfis de acesso
+export const ROLES = {
+  aluno: 'Aluno',
+  supervisor: 'Supervisão',
+  pesquisador: 'Pesquisa (só leitura)',
+  admin: 'Administração',
+};
+export const podeRevisar = (p) => p?.role === 'supervisor' || p?.role === 'admin';
+export const ehEquipe = (p) => podeRevisar(p) || p?.role === 'pesquisador';
+export const ehAdmin = (p) => p?.role === 'admin';
+
 export const inCat = (tag, cat) =>
   cat === 'todos' ||
   (cat === 'campo' && tag.includes('CAMPO')) ||

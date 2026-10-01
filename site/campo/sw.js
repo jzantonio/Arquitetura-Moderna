@@ -1,8 +1,8 @@
 // FIAMS campo · service worker: guarda o app no aparelho para abrir sem internet.
-const V = 'fiams-v5';
-const CORE = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/config.js', 'js/logic.js', 'js/schema.js', 'js/store.js', 'js/ui.js', 'js/form.js', 'js/editor.js', 'js/sup.js',
-  'vendor/preact-htm.js', 'vendor/supabase.js', 'vendor/591.supabase.js', 'vendor/chart.umd.js', 'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css',
-  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+const V = 'fiams-v6';
+const CORE = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/config.js', 'js/logic.js', 'js/schema.js', 'js/store.js', 'js/ui.js', 'js/form.js', 'js/editor.js', 'js/sup.js', 'js/admin.js', '../js/md.js',
+  '../vendor/preact-htm.js', '../vendor/supabase.js', '../vendor/591.supabase.js', '../vendor/chart.umd.js', '../vendor/leaflet/leaflet.js', '../vendor/leaflet/leaflet.css',
+  'manifest.webmanifest', '../icons/icon-192.png', '../icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== V).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {

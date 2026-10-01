@@ -3,7 +3,7 @@
 Uso (na pasta tools):  python regenerar.py
 Requisitos: Python 3.10+ e openpyxl  (pip install openpyxl)
 Entrada:    input/Inventario_MonteCastelo_JoaoPaulo_Filipinho_v4_GERAL_1.xlsx  (não vai para o GitHub)
-Saída:      ../js/schema.js   ../data/seed.json   ../supabase/02_seed_imoveis.sql
+Saída:      ../site/campo/js/schema.js   ../site/campo/data/seed.json   ../supabase/02_seed_imoveis.sql
             work/  (arquivos intermediários e as 86 fichas em Excel; não vai para o GitHub)
 """
 import subprocess, sys

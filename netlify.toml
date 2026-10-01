@@ -1,0 +1,28 @@
+# Plataforma do Inventário da Arquitetura Moderna de São Luís
+# Site estático, sem etapa de build: a Netlify publica a pasta site/.
+#   /         portal público
+#   /campo/   área da equipe (app de campo, supervisão e administração)
+[build]
+  publish = "site"
+  command = ""
+
+# o service worker e as páginas precisam ser sempre conferidos, para os celulares receberem as atualizações
+[[headers]]
+  for = "/campo/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/campo/"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "geolocation=(self), camera=(self), microphone=()"
+
+# endereço antigo do app
+[[redirects]]
+  from = "/app"
+  to = "/campo/"
+  status = 301

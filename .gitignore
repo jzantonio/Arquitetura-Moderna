@@ -7,3 +7,6 @@ node_modules/
 # geradores: entrada e intermediários
 tools/input/
 tools/work/
+
+# publicação local na Netlify
+.netlify/

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>O app mudou de endereço · Arquitetura moderna de São Luís</title>
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://arquitetura-moderna-slz.netlify.app/" />
+  <script>
+    // o app de campo agora fica em /campo/ na plataforma da Netlify; mantém a ficha aberta (#/ficha/...) e o retorno do login
+    var destino = 'https://arquitetura-moderna-slz.netlify.app/campo/' + location.search + location.hash;
+    if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
+    location.replace(destino);
+  </script>
+  <style>body{font-family:system-ui,sans-serif;background:#ECEEEA;color:#1C2629;display:grid;place-content:center;min-height:100vh;margin:0;padding:16px;text-align:center}a{color:#1F4E8C;font-weight:700}</style>
+</head>
+<body>
+  <p>O app de campo mudou de endereço.</p>
+  <p><a href="https://arquitetura-moderna-slz.netlify.app/campo/">Abrir a área da equipe</a> · <a href="https://arquitetura-moderna-slz.netlify.app/">Portal público</a></p>
+</body>
+</html>

@@ -1,7 +1,7 @@
 // FIAMS Campo · aplicativo
-import { html, render, useState, useEffect, useMemo } from '../vendor/preact-htm.js';
+import { html, render, useState, useEffect, useMemo } from '../../vendor/preact-htm.js';
 import { CONFIG } from './config.js';
-import { STATUS, pctOf } from './logic.js';
+import { STATUS, pctOf, ROLES, podeRevisar, ehEquipe } from './logic.js';
 import { api, DEMO, flushAll } from './store.js';
 import { Editor, SyncBadge } from './editor.js';
 import { Supervisao } from './sup.js';
@@ -31,8 +31,9 @@ function Login() {
   return html`<div class="login">
     <div class="login-art" aria-hidden="true"></div>
     <div class="login-card">
-      <div class="brand big"><${Cobogo} pct=${100} size=${44} /><div><b>FIAMS campo</b><span>Inventário da Arquitetura Moderna de São Luís · 1930–1980</span></div></div>
-      <p class="lead">Coleta de dados em campo para a Ficha de Inventário da Arquitetura Moderna de São Luís. Monte Castelo, João Paulo e Filipinho.</p>
+      <a class="back-portal" href="../">‹ Voltar ao portal</a>
+      <div class="brand big"><${Cobogo} pct=${100} size=${44} /><div><b>Área da equipe</b><span>Inventário da Arquitetura Moderna de São Luís · 1930–1980</span></div></div>
+      <p class="lead">Coleta em campo, revisão e publicação das fichas do inventário. Para alunos, supervisão, pesquisadores convidados e administração.</p>
       ${DEMO ? html`<div class="banner info">Modo demonstração: os dados ficam só neste navegador. Entre com <b>${CONFIG.SUPERVISORES[0]}</b> para ver a supervisão.</div>
         <form onSubmit=${demo}><label>E-mail<input type="email" required value=${email} onInput=${(e) => setEmail(e.target.value)} /></label><button class="btn primary full">Entrar (demonstração)</button></form>`
       : html`${msg && html`<p class="msg" role="alert">${msg}</p>`}
@@ -40,7 +41,7 @@ function Login() {
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.2 7-10.3 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.600 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.500 0 11.900-2.100 15.900-5.800l-7.6-5.900c-2.100 1.400-4.800 2.300-8.300 2.300-6.300 0-11.600-4-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z"/></svg>
           ${busy ? 'Abrindo o Google…' : 'Entrar com Google'}</button>
         <p class="hint center">Use sua conta Google, pessoal ou institucional.</p>`}
-      <p class="foot">LUPA · Centro Universitário UNDB · <a href="privacidade.html">Privacidade</a></p>
+      <p class="foot">LUPA · Centro Universitário UNDB · <a href="../privacidade.html">Privacidade</a></p>
     </div></div>`;
 }
 
@@ -52,9 +53,9 @@ function ProfileForm({ profile, onSaved, first }) {
   return html`<form class="card form" onSubmit=${save}>
     ${first && html`<h2>Antes de começar</h2><p class="hint">Estes dados identificam você na ficha (seção 25) e no painel da supervisão.</p>`}
     <label>Nome completo<input required value=${p.nome} onInput=${(e) => setP({ ...p, nome: e.target.value })} /></label>
-    <label>Turma / disciplina<input required=${!!first && profile.role !== 'supervisor'} value=${p.turma} onInput=${(e) => setP({ ...p, turma: e.target.value })} placeholder="Ex.: Estúdio Urbano 2026.2" /></label>
+    <label>Turma / disciplina<input required=${!!first && profile.role === 'aluno'} value=${p.turma} onInput=${(e) => setP({ ...p, turma: e.target.value })} placeholder="Ex.: Estúdio Urbano 2026.2" /></label>
     <label>Matrícula<input value=${p.matricula} onInput=${(e) => setP({ ...p, matricula: e.target.value })} /></label>
-    <p class="hint">E-mail: ${profile.email} · Perfil: ${profile.role === 'supervisor' ? 'supervisão' : 'aluno'}</p>
+    <p class="hint">E-mail: ${profile.email} · Perfil: ${ROLES[profile.role] || profile.role}</p>
     <button class="btn primary" disabled=${busy}>${first ? 'Começar' : 'Salvar'}</button></form>`;
 }
 
@@ -86,7 +87,8 @@ function Home({ profile, imoveis }) {
 
 // ---------------------------------------------------------------- imóveis
 const FILTROS = ['Todos', 'Monte Castelo', 'João Paulo', 'Filipinho', 'Com alertas', 'Sem minha ficha'];
-function Imoveis({ imoveis, reload }) {
+function Imoveis({ imoveis, reload, profile }) {
+  const coleta = profile.role !== 'pesquisador';
   const [q, setQ] = useState(''); const [fil, setFil] = useState('Todos'); const [view, setView] = useState('lista');
   const [sel, setSel] = useState(null); const [mine, setMine] = useState([]); const [novo, setNovo] = useState(false);
   useEffect(() => { api.myFichas().then(setMine).catch(() => {}); }, []);
@@ -107,7 +109,7 @@ function Imoveis({ imoveis, reload }) {
       <div class="seg sm" role="tablist">${['lista', 'mapa'].map((v) => html`<button class=${view === v ? 'on' : ''} onClick=${() => setView(v)}>${v === 'lista' ? 'Lista' : 'Mapa'}</button>`)}</div>
     </div>
     <div class="chips">${FILTROS.map((f) => html`<button class=${'chip' + (fil === f ? ' on' : '')} onClick=${() => setFil(f)}>${f}</button>`)}
-      <button class="chip add" onClick=${() => setNovo(true)}>+ Imóvel não listado</button></div>
+      ${coleta && html`<button class="chip add" onClick=${() => setNovo(true)}>+ Imóvel não listado</button>`}</div>
     ${view === 'mapa' ? html`<${MapView} points=${pts} onPick=${setSel} height=${Math.max(360, window.innerHeight - 300)} />
       <p class="hint">Azul: sem ficha sua. Cores de status: cinza em preenchimento, amarelo aguardando revisão, laranja devolvida, verde aprovada.</p>`
     : html`<ul class="imlist">${list.map((i) => html`<li><button onClick=${() => setSel(i)}>
@@ -115,12 +117,12 @@ function Imoveis({ imoveis, reload }) {
         <span class="im-a">${i.endereco || 'endereço a confirmar'}${i.localidade && i.localidade !== i.bairro ? ` · ${i.localidade}` : ''}</span>
         <span class="im-f">${mm[i.id] ? html`<${StatusPill} s=${mm[i.id].status} />` : i.autor && !/^Autoria não/.test(i.autor) ? html`<span class="muted small">${i.autor}</span>` : ''}
           ${i.alertas && html`<span class="alert-dot" title=${i.alertas}>alertas</span>`}</span></button></li>`)}</ul>`}
-    ${sel && html`<${ImovelDetail} im=${sel} ficha=${mm[sel.id]} onClose=${() => setSel(null)} />`}
+    ${sel && html`<${ImovelDetail} im=${sel} ficha=${mm[sel.id]} coleta=${coleta} onClose=${() => setSel(null)} />`}
     ${novo && html`<${NovoImovel} imoveis=${imoveis} onClose=${() => setNovo(false)} onCreated=${reload} />`}
   </div>`;
 }
 
-function ImovelDetail({ im, ficha, onClose }) {
+function ImovelDetail({ im, ficha, coleta, onClose }) {
   const [busy, setBusy] = useState(false);
   const start = async () => { setBusy(true); try { const id = await api.createFicha(im.id); nav('#/ficha/' + id); } catch (e) { toast(e.message, 'err'); setBusy(false); } };
   const rows = [['Endereço', im.endereco], ['Bairro / localidade', [im.bairro, im.localidade].filter(Boolean).join(' · ')], ['Autoria', im.autor], ['Data', im.data_ref], ['Função no inventário', im.funcao], ['Levantamento 2026', im.levantamento_2026], ['Origem do registro', im.origem]];
@@ -130,9 +132,10 @@ function ImovelDetail({ im, ficha, onClose }) {
     ${im.alertas && html`<div class="banner warn"><b>Verificar em campo:</b> ${im.alertas}.</div>`}
     <p class="hint">A ficha já vem preenchida com o que o Inventário v4 sabe sobre este imóvel (valores marcados como “do inventário”). Confirme ou corrija no local.</p>
     <div class="actions">
+      <a class="btn ghost" href=${'../#/imovel/' + encodeURIComponent(im.id)}>Ver no portal</a>
       ${im.lat && html`<a class="btn ghost" target="_blank" rel="noopener" href=${`https://www.google.com/maps/dir/?api=1&destination=${im.lat},${im.lon}`}>Como chegar</a>`}
       ${ficha ? html`<button class="btn primary" onClick=${() => nav('#/ficha/' + ficha.id)}>Abrir minha ficha</button>`
-        : html`<button class="btn primary" disabled=${busy} onClick=${start}>${busy ? 'Criando…' : 'Iniciar ficha'}</button>`}
+        : coleta && html`<button class="btn primary" disabled=${busy} onClick=${start}>${busy ? 'Criando…' : 'Iniciar ficha'}</button>`}
     </div></${Modal}>`;
 }
 
@@ -165,22 +168,23 @@ function Shell({ profile, setProfile, route }) {
   const [imoveis, setImoveis] = useState(null);
   const load = () => api.listImoveis().then(setImoveis).catch((e) => { toast('Não foi possível carregar os imóveis: ' + e.message, 'err'); setImoveis([]); });
   useEffect(() => { load(); }, []);
-  const sup = profile.role === 'supervisor';
-  const [r0, r1, r2] = route;
+  const sup = ehEquipe(profile); const leitor = profile.role === 'pesquisador';
+  let [r0, r1, r2] = route;
+  if (leitor && !r0) r0 = 'sup'; // pesquisador não coleta: começa pelo acompanhamento
   const tab = r0 === 'imoveis' ? 'imoveis' : r0 === 'sup' ? 'sup' : r0 === 'perfil' ? 'perfil' : 'inicio';
   const inEditor = r0 === 'ficha';
   let view;
   if (r0 === 'ficha') view = html`<${Editor} key=${r1} id=${r1} secParam=${r2 && decodeURIComponent(r2)} profile=${profile} />`;
-  else if (r0 === 'imoveis') view = html`<${Imoveis} imoveis=${imoveis} reload=${load} />`;
-  else if (r0 === 'sup' && sup) view = html`<${Supervisao} route=${route.slice(1)} imoveis=${imoveis} reloadImoveis=${load} />`;
+  else if (r0 === 'imoveis') view = html`<${Imoveis} imoveis=${imoveis} reload=${load} profile=${profile} />`;
+  else if (r0 === 'sup' && sup) view = html`<${Supervisao} route=${route.slice(1)} imoveis=${imoveis} reloadImoveis=${load} profile=${profile} />`;
   else if (r0 === 'perfil') view = html`<div class="page narrow"><h1>Perfil</h1><${ProfileForm} profile=${profile} onSaved=${setProfile} />
     <button class="btn ghost" onClick=${async () => { await flushAll(); nav('#/'); await api.signOut(); }}>Sair</button>
-    <p class="hint">${DEMO ? 'Modo demonstração (dados locais).' : 'Conectado ao Supabase.'}</p></div>`;
+    <p class="hint">${DEMO ? 'Modo demonstração (dados locais).' : 'Conectado ao Supabase.'} · <a href="../">Abrir o portal público</a></p></div>`;
   else view = html`<${Home} profile=${profile} imoveis=${imoveis} />`;
-  const links = [['inicio', '#/', 'Minhas fichas'], ['imoveis', '#/imoveis', 'Imóveis'], ...(sup ? [['sup', '#/sup', 'Supervisão']] : []), ['perfil', '#/perfil', 'Perfil']];
+  const links = [...(leitor ? [] : [['inicio', '#/', 'Minhas fichas']]), ['imoveis', '#/imoveis', 'Imóveis'], ...(sup ? [['sup', '#/sup', podeRevisar(profile) ? 'Supervisão' : 'Acompanhamento']] : []), ['perfil', '#/perfil', 'Perfil']];
   return html`<div class=${'shell' + (inEditor ? ' in-editor' : '')}>
     ${!inEditor && html`<header class="topbar"><a class="brand" href="#/"><${Cobogo} pct=${100} size=${28} color="#fff" /><b>FIAMS campo</b></a>
-      <nav class="topnav">${links.map(([k, h, l]) => html`<a href=${h} class=${tab === k ? 'on' : ''}>${l}</a>`)}</nav><${SyncBadge} /></header>`}
+      <nav class="topnav">${links.map(([k, h, l]) => html`<a href=${h} class=${tab === k ? 'on' : ''}>${l}</a>`)}<a href="../" class="portal-link">Portal ↗</a></nav><${SyncBadge} /></header>`}
     <div class="content">${view}</div>
     ${!inEditor && html`<nav class="tabbar" aria-label="Navegação principal">${links.map(([k, h, l]) => html`<a href=${h} class=${tab === k ? 'on' : ''}><span class=${'ti ti-' + k} aria-hidden="true"></span>${l}</a>`)}</nav>`}
   </div>`;
@@ -197,7 +201,7 @@ function App() {
   let body;
   if (session === undefined || (session && !profile)) body = html`<div class="splash"><${Cobogo} pct=${100} size=${56} /><p>FIAMS campo</p></div>`;
   else if (!session) body = html`<${Login} />`;
-  else if (!profile.nome || (profile.role !== 'supervisor' && !profile.turma)) body = html`<div class="page narrow"><${ProfileForm} profile=${profile} onSaved=${setProfile} first /></div>`;
+  else if (!profile.nome || (profile.role === 'aluno' && !profile.turma)) body = html`<div class="page narrow"><${ProfileForm} profile=${profile} onSaved=${setProfile} first /></div>`;
   else body = html`<${Shell} profile=${profile} setProfile=${setProfile} route=${route} />`;
   return html`${body}<${Toaster} />`;
 }

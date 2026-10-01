@@ -1,5 +1,5 @@
 // FIAMS Campo · componentes visuais compartilhados
-import { html, useEffect, useRef, useState } from '../vendor/preact-htm.js';
+import { html, useEffect, useRef, useState } from '../../vendor/preact-htm.js';
 import { STATUS, TAG_INFO, pctOf } from './logic.js';
 
 export const nav = (p) => { location.hash = p; };

@@ -3,7 +3,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent; WORK=HERE/'work'; INPUT=HERE/'input'; ROOT=HERE.parent
 from openpyxl import load_workbook
 rowmap=json.load(open(WORK/'rowmap.json')); st={s['code']:s for s in json.load(open(WORK/'stats.json'))}
-sch=json.loads(open(ROOT/'js'/'schema.js').read().split("export const SCHEMA=")[1].split(";\nexport const LISTS=")[0])
+sch=json.loads(open(ROOT/'site'/'campo'/'js'/'schema.js').read().split("export const SCHEMA=")[1].split(";\nexport const LISTS=")[0])
 T=load_workbook(str(WORK/'template.xlsx'))['FIAMS']
 inv=load_workbook(str(INPUT/'Inventario_MonteCastelo_JoaoPaulo_Filipinho_v4_GERAL_1.xlsx'))['Consolidado']
 coords={r[0]:(r[11],r[12],r[6]) for r in inv.iter_rows(min_row=2,values_only=True) if r[0]}
@@ -46,7 +46,7 @@ for f in sorted(glob.glob(str(WORK/'fichas'/'FIAMS-*.xlsx'))):
     d["__pre"]=sorted(set(pre))
     out.append({"id":code,"n":s['n'],"nome":s['nome'],"endereco":s['end'],"bairro":s['aba'],"localidade":loc,"lat":lat,"lon":lon,"autor":s['autor'],
         "data_ref":str(s['data']) if s['data'] not in (None,'-') else None,"funcao":s['funcao'],"origem":s['origem'],"levantamento_2026":s['surv'] or None,"alertas":s['alerts'] or None,"seed":d})
-json.dump(out,open(ROOT/'data'/'seed.json','w'),ensure_ascii=False)
+json.dump(out,open(ROOT/'site'/'campo'/'data'/'seed.json','w'),ensure_ascii=False)
 # SQL
 def q(v):
     if v is None: return "null"

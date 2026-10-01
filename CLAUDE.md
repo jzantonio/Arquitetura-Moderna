@@ -1,73 +1,90 @@
-# FIAMS campo — contexto para o Claude Code
+# Arquitetura moderna de São Luís (FIAMS) — contexto para o Claude Code
 
 Responda sempre em português do Brasil. O usuário é o Prof. José Antônio Viana Lopes (UNDB, coordenador do LUPA). Trabalhe de forma autônoma: execute, teste e só pergunte quando a decisão for dele.
 
 ## O que é
 
-Web app (PWA, celular/tablet/desktop) para coleta em campo da **Ficha de Inventário da Arquitetura Moderna de São Luís (FIAMS)**, recorte Monte Castelo, João Paulo e Filipinho. Alunos preenchem fichas; a supervisão acompanha, revisa, devolve ou aprova.
+Plataforma do **Inventário da Arquitetura Moderna de São Luís (1930–1980)**, recorte Monte Castelo, João Paulo e Filipinho:
 
-- App no ar (GitHub Pages): https://jzantonio.github.io/Arquitetura-Moderna/
-- Repositório: https://github.com/jzantonio/Arquitetura-Moderna (público; a publicação é automática a cada push na `main`, por `.github/workflows/pages.yml`)
-- Supabase: projeto **Arquitetura Moderna SLZ**, id `mbaojesxkkwnjpmjgcqj`, URL `https://mbaojesxkkwnjpmjgcqj.supabase.co`
-- Netlify: site `fiams-campo` (id `3908b0d8-3500-4973-8eeb-14112664244c`) criado e ainda vazio. Decidir com o usuário se será usado ou apagado.
+- **Portal público** (`/`): apresentação, números, mapa e acervo dos 86 imóveis, página de cada imóvel com a ficha publicada, textos do projeto. Visitante sem login.
+- **Área da equipe** (`/campo/`): PWA de coleta da **Ficha FIAMS** (celular/tablet/desktop), supervisão (revisar, devolver, aprovar) e administração (publicar no portal, papéis, textos).
+
+Endereços e serviços:
+- Plataforma (Netlify): https://arquitetura-moderna-slz.netlify.app — site `arquitetura-moderna-slz`, id `3908b0d8-3500-4973-8eeb-14112664244c`. Publica a pasta `site/` (`netlify.toml`, sem build).
+- Repositório: https://github.com/jzantonio/Arquitetura-Moderna (público). Clone local em `C:\Users\Jose Antonio\Downloads\fiams-campo\repo`.
+- GitHub Pages (`jzantonio.github.io/Arquitetura-Moderna/`): só redireciona para a Netlify (`github-pages/`, `.github/workflows/pages.yml`).
+- Supabase: projeto **Arquitetura Moderna SLZ**, id `mbaojesxkkwnjpmjgcqj`, URL `https://mbaojesxkkwnjpmjgcqj.supabase.co`. Site URL e Redirect URL: `https://arquitetura-moderna-slz.netlify.app/campo/` (o endereço do GitHub Pages continua na lista, para a transição).
+- Google Cloud: projeto `fiams-campo` (conta joseantonioarq@gmail.com), OAuth Externo **em produção**, cliente Web "FIAMS campo (Supabase)". Branding: página inicial e privacidade na Netlify; domínios autorizados: o do Supabase e `arquitetura-moderna-slz.netlify.app`. A chave secreta do cliente fica só no Supabase.
+
+## Publicar uma mudança
+
+1. Commit e push na `main` (o push não publica a Netlify sozinho enquanto o repositório não estiver ligado a ela).
+2. Publicar na Netlify: MCP da Netlify, `deploy-site` com o siteId acima; ele devolve um comando `npx -y @netlify/mcp@latest --site-id … --proxy-path …` para rodar na raiz do repositório.
+3. Conferir com `curl` as páginas no ar.
 
 ## Stack e estrutura
 
-Sem build. JavaScript ES modules, Preact + htm (em `vendor/`), Chart.js, Leaflet, supabase-js (UMD). Nada de CDN além das fontes do Google.
+Sem build. JavaScript ES modules, Preact + htm (`site/vendor/`), Chart.js, Leaflet, supabase-js (UMD). Nada de CDN além das fontes do Google.
 
 ```
-index.html, sw.js, manifest.webmanifest   página, offline (service worker), PWA
-css/app.css                               estilos (mobile-first; identidade "cobogó")
-js/config.js                              URL e chave anon do Supabase; lista de supervisores; domínio
-js/schema.js                              GERADO por tools/: seções, campos, listas da ficha
-js/logic.js                               completude, lógica de salto, essenciais, IIM, textos didáticos, CSV
-js/store.js                               dados: backend Supabase e backend DEMO (localStorage); fila offline
-js/form.js  editor.js  ui.js              formulário, editor da ficha, componentes
-js/app.js                                 login (Google), início, imóveis, perfil, rotas (hash)
-js/sup.js                                 menu Supervisão: painel, alunos, fichas, revisão, inventário
-data/seed.json                            GERADO por tools/: 86 imóveis + pré-preenchimento (Inventário v4)
-supabase/01_schema.sql, 02_seed_imoveis.sql (o 02 é gerado por tools/)
-tools/                                    geradores em Python (ver tools/README.md)
+site/index.html, css/portal.css, js/portal.js   portal (rotas #/, #/acervo, #/acervo/mapa, #/imovel/ID, #/projeto)
+site/js/ficha-publica.js                        leitura da ficha publicada (usa campo/js/logic.js e schema.js)
+site/js/md.js                                   formatação segura dos textos (escapa HTML)
+site/privacidade.html                           política de privacidade (exigida pelo Google)
+site/campo/index.html, sw.js, manifest          área da equipe (PWA; o service worker cobre /campo/)
+site/campo/js/config.js                         URL e chave anon do Supabase; e-mails do modo demonstração
+site/campo/js/schema.js                         GERADO por tools/: seções, campos, listas da ficha
+site/campo/js/logic.js                          completude, salto, essenciais, IIM, textos, CSV, papéis (podeRevisar/ehEquipe/ehAdmin)
+site/campo/js/store.js                          dados: Supabase e DEMO (localStorage); fila offline
+site/campo/js/form.js editor.js ui.js           formulário, editor, componentes
+site/campo/js/app.js                            login (Google), início, imóveis, perfil, rotas
+site/campo/js/sup.js                            supervisão/acompanhamento: painel, alunos, fichas, revisão, inventário
+site/campo/js/admin.js                          administração: Publicação, Pessoas, Textos do portal
+site/campo/data/seed.json                       GERADO por tools/: 86 imóveis + pré-preenchimento
+supabase/01_schema.sql, 02_seed_imoveis.sql (gerado), 03_plataforma.sql
+tools/                                          geradores em Python (ver tools/README.md); sem Python nesta máquina, use Node
 ```
 
-Modo demonstração: se `SUPABASE_URL`/`SUPABASE_ANON_KEY` em `js/config.js` estiverem vazios, o app usa localStorage. Para testar local: `python -m http.server` na raiz, com as chaves esvaziadas numa cópia.
+Teste local: servidor estático na pasta `site/` (o portal lê o banco real como visitante). Para a área da equipe, use uma cópia com as chaves esvaziadas em `campo/js/config.js` (modo demonstração; `jose.lopes@undb.edu.br` entra como admin).
 
 ## Banco (Supabase)
 
-Tabelas: `supervisores`, `profiles`, `imoveis`, `fichas`, `revisoes`, `fotos`, mais o bucket privado `fotos`. RLS em tudo. O aluno só vê as próprias fichas; supervisor vê tudo; só supervisor aprova ou devolve (gatilho `guard_status`).
+Tabelas: `profiles`, `papeis`, `imoveis`, `fichas`, `revisoes`, `fotos`, `conteudo`, mais o bucket privado `fotos`. RLS em tudo.
 
-- **Cadastro só por Google, qualquer domínio**, imposto no banco pelo gatilho `enforce_google` em `auth.users`. A restrição a `@undb.edu.br` foi retirada a pedido do usuário em 30/09/2026 (banco e app). Não afrouxe o "só Google" sem o usuário. Não peça para desativar a confirmação de e-mail e nunca coloque a chave `service_role` no repositório.
-- Supervisores (super adm): `jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`, definidos na tabela `supervisores`; o papel é atribuído na criação da conta.
-- As migrações foram aplicadas direto no projeto pelo MCP do Supabase. Os arquivos `supabase/*.sql` são a fonte de verdade para recriar. Se mudar o banco, atualize também o `01_schema.sql`.
-- A tabela `imoveis` tem os 86 imóveis **sem** o campo `seed` (pré-preenchimento). O app busca em `data/seed.json` quando o banco vem sem ele (`getImovelSeed` em `store.js`). O botão "Carregar / atualizar" na Supervisão grava o seed completo.
-- O MCP do Supabase é o jeito mais rápido de conferir dados e aplicar SQL. Rode `get_advisors` (security) depois de mudar o esquema. Sobra um aviso esperado sobre `is_supervisor()`.
+- **Perfis** (`profiles.role`): `aluno`, `supervisor`, `pesquisador` (lê tudo, não escreve), `admin`. Funções: `is_supervisor()` (supervisor ou admin), `is_equipe()` (+ pesquisador), `is_admin()`. A tabela `papeis` (e-mail → papel) define o papel na criação da conta e, ao mudar, atualiza a conta existente; o gatilho impede ficar sem administrador. RPC `definir_papel(uid, papel)` só para admin. Hoje: José = admin, Luís = supervisor.
+- **Cadastro só por Google, qualquer domínio** (gatilho `enforce_google`). A restrição `@undb.edu.br` foi retirada a pedido do usuário em 30/09/2026. Não afrouxe o "só Google" sem o usuário. Nunca coloque a chave `service_role` no repositório.
+- **Publicação**: `fichas.publicada`, `publicada_em`, `dados_publicos`. Só admin publica, só ficha aprovada; sair de "aprovada" despublica. `dados_publicos = dados_para_publico(dados)` remove `v.*`, `23.*`, `Q1–Q7`, `24.5`, `1.1.3` e `__*`. No insert o gatilho força `rascunho` para não supervisores.
+- **Leitura pública (anon)** por coluna: `imoveis` (id, n, nome, endereço, bairro, localidade, lat, lon, autor, data_ref, função), `fichas` publicadas (id, imovel_id, publicada, publicada_em, dados_publicos), `fotos` de fichas publicadas e seus arquivos no Storage, `conteudo`, RPC `estatisticas_publicas()`. O portal usa sempre um cliente anônimo (sem sessão). Nada de `select=*` como anon.
+- `imoveis.seed` está vazio no banco; a área da equipe usa `campo/data/seed.json` (`getImovelSeed`).
+- Rode `get_advisors` (security) depois de mudar o esquema. Avisos esperados: funções `security definer` executáveis (`estatisticas_publicas` pelo anon; `is_*` e `definir_papel` por autenticados) e "leaked password protection" (login por senha desligado).
+- Os `supabase/*.sql` são a fonte de verdade para recriar (01 → 02 → 03). Se mudar o banco, atualize o arquivo correspondente.
 
 ## Regras da ficha (não mudar sem o usuário)
 
-- **Recorte temporal 1930–1980** (decidido pelo usuário em 30/09/2026; antes era 1930–1970). Lista `PER` do 4.2: décadas até "1970–1979" e "1980". Os 8 imóveis dos anos 1970 deixaram de ter alerta "fora do recorte". Os arquivos gerados foram ajustados por script Node (sem Python nem Inventário v4 à mão), reproduzindo o que `fill.py`/`build_ficha.py` corrigidos gerariam.
+- **Recorte temporal 1930–1980** (decidido em 30/09/2026). Lista `PER` do 4.2: décadas até "1970–1979" e "1980".
 - Ordem numérica da FIAMS, em 7 etapas (A a G). Seção 0 "Visita de campo" vem do Roteiro de campo.
-- **Sem travas rígidas.** Lógica de salto suave: campo "não se aplica" some da conta (ex.: sem acesso ao interior oculta 8.2.2–8.2.5). Filtro Tudo/Campo/Documental/Análise = "modo campo".
-- Única trava: **enviar à supervisão** exige 10 itens essenciais (`essentials()` em `logic.js`), incluindo GPS capturado em campo (não geocodificação) e foto da fachada principal.
-- IIM: A1–A7, Preservado 2 / Adaptado 1 / Suprimido 0; n.a./s.d. ficam fora do cálculo.
-- Valores vindos do Inventário v4 aparecem como "do inventário", com botão para confirmar em campo. Divergências são sinalizadas, nunca resolvidas sozinhas.
-- Offline: cache local com bandeira de pendência, envio automático ao voltar a conexão; fotos em IndexedDB.
+- **Sem travas rígidas.** Lógica de salto suave. Única trava: enviar à supervisão exige os 10 itens essenciais (`essentials()`), incluindo GPS de campo e foto da fachada principal.
+- IIM: A1–A7, Preservado 2 / Adaptado 1 / Suprimido 0; n.a./s.d. fora do cálculo.
+- Valores do Inventário v4 aparecem como "do inventário", com botão para confirmar em campo. Divergências são sinalizadas, nunca resolvidas sozinhas.
+- Nunca renumere códigos de campo (ex.: `8.2.1`): os dados são guardados por eles, e o filtro público depende de `v.`, `23.`, `Q1–Q7`, `24.5` e `1.1.3`.
 
 ## Convenções
 
-- Texto da interface em pt-BR, frases curtas, verbo no infinitivo ou imperativo, sem jargão técnico.
-- Identidade: fundo concreto `#ECEEEA`, grafite `#1C2629`, azulejo `#1F4E8C`, campo `#E07B00`, documental `#3D6E9E`, análise `#4F7F45`; fonte Archivo; o cobogó é o elemento de assinatura (navegação por seções, logotipo, fundo do login).
-- **Ao alterar qualquer arquivo do app, aumente a versão em `sw.js` (`fiams-v2` → `fiams-v3`)** para os celulares baixarem a nova versão.
-- `js/schema.js`, `data/seed.json` e `supabase/02_seed_imoveis.sql` são **gerados** por `tools/regenerar.py` (Python + openpyxl) a partir da ficha FIAMS (`tools/build_ficha.py`) e do Inventário v4. Não edite esses três arquivos à mão: altere os geradores e rode de novo. O Inventário v4 (`tools/input/`) não vai para o GitHub; peça-o ao usuário se precisar regenerar. Nunca renumere códigos de campo (ex.: `8.2.1`): os dados dos alunos são guardados por eles.
+- Texto da interface em pt-BR, frases curtas, sem jargão técnico.
+- Identidade: concreto `#ECEEEA`, grafite `#1C2629`, azulejo `#1F4E8C`, campo `#E07B00`, documental `#3D6E9E`, análise `#4F7F45`; fonte Archivo; o cobogó é o elemento de assinatura.
+- **Ao alterar arquivos da área da equipe, aumente a versão em `site/campo/sw.js` (`fiams-vN`)**. Arquivo novo usado pela área da equipe entra na lista `CORE` do `sw.js`.
+- `schema.js`, `seed.json` e `02_seed_imoveis.sql` são **gerados** (`tools/regenerar.py`). Não edite à mão; o Inventário v4 (`tools/input/`) não vai para o GitHub.
 
 ## Estado atual e pendências
 
-Feito: banco e regras no Supabase; 86 imóveis carregados; app publicado; regra de cadastro só-Google no banco; código de login com Google escrito e testado em modo demonstração; recorte 1930–1980 e cadastro aberto a qualquer conta Google publicados (30/09/2026). Login com Google ATIVO desde 30/09/2026: projeto Google Cloud `fiams-campo` (conta joseantonioarq@gmail.com), app OAuth Externo e Em produção, cliente Web com retorno no callback do Supabase; provedor Email desativado no Supabase. Testado de ponta a ponta com jose.lopes@undb.edu.br (papel supervisor, ficha pré-preenchida, salvar/recarregar, menu Supervisão). A chave secreta do cliente fica só no Supabase. A política de privacidade é `privacidade.html` (exigida pelo Google; linkada no rodapé do login). O `pages.yml` publica uma lista fixa de arquivos: arquivo novo na raiz precisa entrar no `cp`.
+Feito (30/09/2026): plataforma publicada na Netlify (portal + área da equipe); banco com perfis, publicação, leitura pública e textos (`03_plataforma.sql`, aplicado e testado como anon e como admin numa transação desfeita); login com Google ativo e testado com jose.lopes@undb.edu.br; GitHub Pages redirecionando para a Netlify.
 
-Pendente, em ordem:
-1. Decidir sobre o Netlify (publicar aqui ou apagar o site vazio). Se publicar, adicionar o endereço em Supabase → Authentication → URL Configuration.
-2. Opcional: gravar o `seed` completo no banco (botão na Supervisão).
-3. Testar com uma conta de aluno (Gmail qualquer): perfil com turma, ficha, foto, envio à supervisão e revisão (devolver/aprovar).
+Pendente:
+1. Ligar o repositório do GitHub à Netlify (publicação automática a cada push). Exige o usuário autorizar o app da Netlify no GitHub.
+2. Primeira ficha real aprovada e publicada: conferir a página pública com fotos.
+3. Testar com uma conta de aluno (Gmail qualquer): perfil, ficha, foto, envio, revisão.
+4. Opcional: domínio próprio (ex.: inventario.lupa…); se mudar, atualizar Supabase (URLs) e Google (branding e domínios).
 
 ## Testes
 
-Não há suíte no repositório. O fluxo foi validado com Playwright em modo demonstração (login, imóveis, ficha, GPS, IIM, foto, envio, supervisão) e as regras do banco com PostgreSQL local. Vale recriar um teste E2E básico (`tests/`) se o usuário quiser.
+Não há suíte no repositório. Validação feita no navegador: portal com dados reais (celular e computador), leitor de ficha publicada com dados do seed (sem vazamento dos campos sigilosos), área da equipe em modo demonstração com os perfis admin e pesquisador (publicar, pessoas, revisão só leitura), e regras do banco por SQL com `set role anon`/`authenticated`.

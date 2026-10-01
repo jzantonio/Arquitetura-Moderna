@@ -79,6 +79,6 @@ for s in sections:
         {"type":"sub","title":"27. Matriz de monitoramento (1 a 5; 5 = situação mais favorável)"},
         {"type":"matrix","id":"matriz","tag":"ANÁLISE","rows":[["Integridade","1 muito baixa → 5 muito alta"],["Autenticidade","1 muito baixa → 5 muito alta"],["Estado de conservação","1 ruína → 5 excelente"],["Integridade do entorno","1 descaracterizado → 5 preservado"],["Compatibilidade de uso","1 incompatível → 5 compatível"],["Risco de descaracterização","1 crítico → 5 muito baixo"],["Risco de perda","1 crítico → 5 muito baixo"],["Pressão imobiliária","1 muito alta → 5 muito baixa"],["Proteção legal","1 nenhuma → 5 tombamento"],["Documentação disponível","1 inexistente → 5 completa"]]}]
 LISTS["SITMON"]=LISTS["SITMON"]; 
-open(ROOT/'js'/'schema.js','w').write("export const SCHEMA="+json.dumps({"sections":sections,"stages":STAGES},ensure_ascii=False)+";\nexport const LISTS="+json.dumps(LISTS,ensure_ascii=False)+";\n")
+open(ROOT/'site'/'campo'/'js'/'schema.js','w').write("export const SCHEMA="+json.dumps({"sections":sections,"stages":STAGES},ensure_ascii=False)+";\nexport const LISTS="+json.dumps(LISTS,ensure_ascii=False)+";\n")
 json.dump(rowmap,open(WORK/'rowmap.json','w'),ensure_ascii=False)
 print(len(sections),sum(len(s['items']) for s in sections))

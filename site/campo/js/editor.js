@@ -1,5 +1,5 @@
 // FIAMS Campo · editor da ficha
-import { html, useState, useEffect, useMemo, useCallback } from '../vendor/preact-htm.js';
+import { html, useState, useEffect, useMemo, useCallback } from '../../vendor/preact-htm.js';
 import { SCHEMA, CATS, progress, progressSummary, essentials, narrative, sectionHasCat, secTitle, stageOf, pctOf, isEmpty, STATUS } from './logic.js';
 import { api, openFicha, saveFichaLocal, queuePhoto, pendingPhotos, flushAll, compressImage, onSync, getSyncState } from './store.js';
 import { SectionView, Segmented } from './form.js';

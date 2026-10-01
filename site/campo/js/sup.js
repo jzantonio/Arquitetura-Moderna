@@ -1,6 +1,7 @@
-// FIAMS Campo · supervisão (José Lopes e Luís Longhi)
-import { html, useState, useEffect, useMemo } from '../vendor/preact-htm.js';
-import { SCHEMA, STATUS, progress, narrative, essentials, secTitle, pctOf, joinPt, sigRow, toCSV } from './logic.js';
+// FIAMS Campo · supervisão, acompanhamento (pesquisa) e administração
+import { html, useState, useEffect, useMemo } from '../../vendor/preact-htm.js';
+import { SCHEMA, STATUS, ROLES, progress, narrative, essentials, secTitle, pctOf, joinPt, sigRow, toCSV, podeRevisar, ehAdmin } from './logic.js';
+import { PublicarBox, Publicacao, Pessoas, Textos } from './admin.js';
 import { api, loadSeedFile } from './store.js';
 import { Bar, CatBars, StatusPill, ChartBox, COLORS, Modal, toast, nav, relTime, fmtDate, Empty, download, Cobogo } from './ui.js';
 
@@ -33,29 +34,35 @@ async function exportCSV(filterFn, name) {
   download(name, toCSV(rows)); toast(`${rows.length} fichas exportadas.`);
 }
 
-export function Supervisao({ route, imoveis, reloadImoveis }) {
+export function Supervisao({ route, imoveis, reloadImoveis, profile }) {
   const { fichas, profiles, reload } = useSupData();
   const [r0, r1] = route;
   const tab = r0 || 'painel';
-  const tabs = [['painel', 'Painel'], ['alunos', 'Alunos'], ['fichas', 'Fichas'], ['inventario', 'Inventário']];
+  const adm = ehAdmin(profile);
+  const tabs = [['painel', 'Painel'], ['alunos', 'Alunos'], ['fichas', 'Fichas'], ['inventario', 'Inventário'],
+    ...(adm ? [['publicacao', 'Publicação'], ['pessoas', 'Pessoas'], ['textos', 'Textos do portal']] : [])];
   let view;
   if (!fichas) view = html`<div class="loading">Carregando dados da turma…</div>`;
   else if (tab === 'alunos') view = html`<${Alunos} fichas=${fichas} profiles=${profiles} />`;
   else if (tab === 'aluno') view = html`<${AlunoDetail} id=${r1} fichas=${fichas} profiles=${profiles} />`;
   else if (tab === 'fichas') view = html`<${Fichas} fichas=${fichas} />`;
-  else if (tab === 'ficha') view = html`<${Review} id=${r1} onChanged=${reload} />`;
-  else if (tab === 'inventario') view = html`<${Inventario} fichas=${fichas} imoveis=${imoveis} reloadImoveis=${reloadImoveis} />`;
+  else if (tab === 'ficha') view = html`<${Review} id=${r1} onChanged=${reload} profile=${profile} />`;
+  else if (tab === 'inventario') view = html`<${Inventario} fichas=${fichas} imoveis=${imoveis} reloadImoveis=${reloadImoveis} profile=${profile} />`;
+  else if (tab === 'publicacao' && adm) view = html`<${Publicacao} fichas=${fichas} onChanged=${reload} />`;
+  else if (tab === 'pessoas' && adm) view = html`<${Pessoas} profiles=${profiles} fichas=${fichas} onChanged=${reload} me=${profile} />`;
+  else if (tab === 'textos' && adm) view = html`<${Textos} />`;
   else view = html`<${Painel} fichas=${fichas} profiles=${profiles} imoveis=${imoveis} />`;
   const cur = tab === 'aluno' ? 'alunos' : tab === 'ficha' ? 'fichas' : tab;
   return html`<div class="page sup">
-    <div class="page-h"><h1>Supervisão</h1><button class="btn ghost sm" onClick=${reload}>Atualizar</button></div>
+    <div class="page-h"><h1>${podeRevisar(profile) ? 'Supervisão' : 'Acompanhamento'}</h1><button class="btn ghost sm" onClick=${reload}>Atualizar</button></div>
+    ${!podeRevisar(profile) && html`<div class="banner info">Perfil de pesquisa: você consulta todas as fichas, gráficos e exportações, sem editar, aprovar ou devolver.</div>`}
     <div class="subtabs" role="tablist">${tabs.map(([k, l]) => html`<a role="tab" aria-selected=${cur === k} class=${cur === k ? 'on' : ''} href=${'#/sup/' + (k === 'painel' ? '' : k)}>${l}</a>`)}</div>
     ${view}</div>`;
 }
 
 // ---------------------------------------------------------------- painel
 function Painel({ fichas, profiles, imoveis }) {
-  const alunos = profiles.filter((p) => p.role !== 'supervisor');
+  const alunos = profiles.filter((p) => p.role === 'aluno');
   const st = Object.fromEntries(Object.keys(STATUS).map((k) => [k, fichas.filter((f) => f.status === k).length]));
   const cobertos = new Set(fichas.map((f) => f.imovel_id)).size; const totalIm = (imoveis || []).length || 86;
   const media = avg(fichas.map((f) => f.progresso?.pct || 0));
@@ -115,7 +122,7 @@ function FichaRows({ fichas, showAluno = true }) {
 // ---------------------------------------------------------------- alunos
 function Alunos({ fichas, profiles }) {
   const [q, setQ] = useState('');
-  const alunos = profiles.filter((p) => p.role !== 'supervisor' || fichas.some((f) => f.aluno_id === p.id))
+  const alunos = profiles.filter((p) => p.role === 'aluno' || fichas.some((f) => f.aluno_id === p.id))
     .filter((p) => !q || `${p.nome} ${p.email} ${p.turma}`.toLowerCase().includes(q.toLowerCase()))
     .map((p) => { const fs = fichas.filter((f) => f.aluno_id === p.id); return { p, fs, media: avg(fs.map((f) => f.progresso?.pct || 0)), last: fs[0]?.updated_at }; })
     .sort((a, b) => (a.p.nome || a.p.email).localeCompare(b.p.nome || b.p.email));
@@ -172,7 +179,8 @@ function Fichas({ fichas }) {
 }
 
 // ---------------------------------------------------------------- revisão de uma ficha
-function Review({ id, onChanged }) {
+function Review({ id, onChanged, profile }) {
+  const revisa = podeRevisar(profile); const adm = ehAdmin(profile);
   const [f, setF] = useState(null); const [fotos, setFotos] = useState([]); const [revs, setRevs] = useState([]);
   const [sec, setSec] = useState(''); const [txt, setTxt] = useState(''); const [busy, setBusy] = useState(false);
   const load = async () => { const x = await api.getFicha(id); setF(x); api.listFotos(id).then(setFotos).catch(() => {}); api.listRevisoes(id).then(setRevs).catch(() => {}); };
@@ -209,19 +217,21 @@ function Review({ id, onChanged }) {
         <div class="panel"><h3>Fotos (${fotos.length})</h3>${fotos.length ? html`<div class="gallery">${fotos.map((x) => html`<figure><a href=${x.url} target="_blank" rel="noopener"><img src=${x.url} alt=${x.vista} loading="lazy" /></a><figcaption><b>${x.vista}</b>${x.legenda ? html`<br/>${x.legenda}` : ''}</figcaption></figure>`)}</div>` : html`<p class="hint">Nenhuma foto enviada.</p>`}</div>
       </div>
       <aside class="rv-side">
-        <div class="panel sticky"><h3>Retorno ao aluno</h3>
+        <div class="panel sticky">${f.status === 'aprovada' && html`<${PublicarBox} f=${f} adm=${adm} onChanged=${async () => { await load(); onChanged && onChanged(); }} />`}
+          ${revisa ? html`<h3>Retorno ao aluno</h3>
           <label>Seção<select value=${sec} onChange=${(e) => setSec(e.target.value)}><option value="">Ficha inteira</option>${SCHEMA.sections.map((s) => html`<option value=${s.id}>${secTitle(s)}</option>`)}</select></label>
           <label>Comentário<textarea id="rv-txt" rows="5" value=${txt} onInput=${(e) => setTxt(e.target.value)} placeholder="Ex.: confira a numeração no local; a fachada lateral não foi fotografada."></textarea></label>
           <button class="btn ghost full" disabled=${busy} onClick=${() => comment('comentario')}>Adicionar comentário</button>
           <div class="rv-act"><button class="btn warn" disabled=${busy} onClick=${() => comment('devolucao')}>Devolver ao aluno</button>
-            <button class="btn ok" disabled=${busy} onClick=${() => confirm('Aprovar esta ficha? O aluno não poderá mais editá-la.') && comment('aprovacao')}>Aprovar</button></div>
+            <button class="btn ok" disabled=${busy} onClick=${() => confirm('Aprovar esta ficha? O aluno não poderá mais editá-la.') && comment('aprovacao')}>Aprovar</button></div>`
+          : html`<h3>Consulta</h3><p class="hint">Somente leitura. Comentários, devoluções e aprovações ficam com a supervisão.</p>`}
           <a class="btn ghost full" href=${'#/ficha/' + id}>Abrir a ficha completa</a>
           <h4>Histórico</h4>${revs.length ? html`<ul class="hist">${revs.map((r) => html`<li class=${r.resolvido ? 'done' : ''}><b>${r.tipo === 'devolucao' ? 'Devolução' : r.tipo === 'aprovacao' ? 'Aprovação' : 'Comentário'}</b>${r.secao ? ` · seção ${r.secao}` : ''}<p>${r.comentario}</p><small>${nomeAluno(r.profiles)} · ${relTime(r.created_at)}${r.resolvido ? ' · resolvido pelo aluno' : ''}</small></li>`)}</ul>` : html`<p class="hint">Sem registros.</p>`}
         </div></aside></div></div>`;
 }
 
 // ---------------------------------------------------------------- inventário
-function Inventario({ fichas, imoveis, reloadImoveis }) {
+function Inventario({ fichas, imoveis, reloadImoveis, profile }) {
   const [f, setF] = useState('todos'); const [imp, setImp] = useState(null);
   const by = {}; fichas.forEach((x) => { (by[x.imovel_id] = by[x.imovel_id] || []).push(x); });
   const list = (imoveis || []).filter((i) => f === 'todos' || (f === 'sem' ? !by[i.id] : f === 'com' ? by[i.id] : (by[i.id] || []).some((x) => x.status === 'aprovada')));
@@ -233,7 +243,7 @@ function Inventario({ fichas, imoveis, reloadImoveis }) {
   return html`<div>
     <div class="panel"><h3>Inventário no banco de dados</h3>
       <p>${(imoveis || []).length} imóveis cadastrados; ${Object.keys(by).length} com pelo menos uma ficha. Os 86 imóveis do Inventário v4 são carregados pelo arquivo <code>02_seed_imoveis.sql</code> ou pelo botão abaixo.</p>
-      <div class="actions left"><button class="btn ghost" disabled=${!!imp} onClick=${importar}>${imp ? `Carregando ${imp[0]}/${imp[1]}…` : 'Carregar / atualizar os 86 imóveis'}</button>
+      <div class="actions left">${podeRevisar(profile) && html`<button class="btn ghost" disabled=${!!imp} onClick=${importar}>${imp ? `Carregando ${imp[0]}/${imp[1]}…` : 'Carregar / atualizar os 86 imóveis'}</button>`}
         <button class="btn ghost" onClick=${() => exportCSV(null, 'fiams_todas_as_fichas.csv')}>Exportar todas as fichas (CSV)</button></div></div>
     <div class="chips">${[['todos', 'Todos'], ['sem', 'Sem ficha'], ['com', 'Com ficha'], ['apr', 'Com ficha aprovada']].map(([k, l]) => html`<button class=${'chip' + (f === k ? ' on' : '')} onClick=${() => setF(k)}>${l}</button>`)}</div>
     <div class="panel"><table class="tbl-inv"><thead><tr><th>Código</th><th>Imóvel</th><th>Bairro</th><th>Fichas</th><th>Melhor completude</th><th>Situação</th></tr></thead>

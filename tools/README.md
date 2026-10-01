@@ -4,8 +4,8 @@ Estes programas produzem os arquivos que o app usa, a partir da **planilha FIAMS
 
 | Saída | O que é |
 |---|---|
-| `../js/schema.js` | seções, campos e listas da ficha no app |
-| `../data/seed.json` | 86 imóveis com o pré-preenchimento de cada ficha |
+| `../site/campo/js/schema.js` | seções, campos e listas da ficha no app |
+| `../site/campo/data/seed.json` | 86 imóveis com o pré-preenchimento de cada ficha |
 | `../supabase/02_seed_imoveis.sql` | mesma carga, em SQL para o Supabase |
 | `work/fichas/` | as 86 fichas em Excel, com o pré-preenchido em azul (não vai para o GitHub) |
 | `work/template.xlsx` | a ficha FIAMS em branco, em Excel (não vai para o GitHub) |
@@ -26,8 +26,8 @@ Arquivo de entrada: `input/Inventario_MonteCastelo_JoaoPaulo_Filipinho_v4_GERAL_
 2. `fill.py` preenche uma ficha por imóvel com os dados do Inventário v4. Os valores extraídos das observações de cada registro estão em `overrides.py`; ao revisar o inventário, ajuste-os lá.
 3. `blue.py` marca em azul o que veio do inventário.
 4. `index.py` monta o índice das fichas.
-5. `gen_app_data.py` converte o esquema em `js/schema.js` (títulos das seções, etapas, tabelas).
-6. `gen_seed.py` lê as fichas e escreve `data/seed.json` e `02_seed_imoveis.sql`.
+5. `gen_app_data.py` converte o esquema em `site/campo/js/schema.js` (títulos das seções, etapas, tabelas).
+6. `gen_seed.py` lê as fichas e escreve `site/campo/data/seed.json` e `02_seed_imoveis.sql`.
 
 ## Depois de regenerar
 

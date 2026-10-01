@@ -109,9 +109,19 @@ function supabaseBackend() {
     },
     async deleteFicha(id) { ok(await sb.from('fichas').delete().eq('id', id)); },
     async allFichas(withDados = false) {
-      const cols = 'id,imovel_id,aluno_id,status,progresso,created_at,updated_at,enviada_em,revisada_em,imoveis(nome,bairro,localidade),profiles(nome,email,turma,matricula)' + (withDados ? ',dados' : '');
+      const cols = 'id,imovel_id,aluno_id,status,progresso,created_at,updated_at,enviada_em,revisada_em,publicada,publicada_em,imoveis(nome,bairro,localidade),profiles(nome,email,turma,matricula)' + (withDados ? ',dados' : '');
       return ok(await sb.from('fichas').select(cols).order('updated_at', { ascending: false }));
     },
+    // publicação no portal (o banco só aceita da administração e só para fichas aprovadas)
+    async setPublicada(id, v) { return ok(await sb.from('fichas').update({ publicada: v }).eq('id', id).select('id,publicada,publicada_em').single()); },
+    // papéis
+    async definirPapel(uid, role) { ok(await sb.rpc('definir_papel', { alvo: uid, novo: role })); },
+    async listPapeis() { return ok(await sb.from('papeis').select('*').order('email')); },
+    async savePapel(email, role) { return ok(await sb.from('papeis').upsert({ email: email.trim().toLowerCase(), role }).select().single()); },
+    async deletePapel(email) { ok(await sb.from('papeis').delete().eq('email', email)); },
+    // textos públicos do portal
+    async listConteudo() { return ok(await sb.from('conteudo').select('*').order('ordem')); },
+    async saveConteudo(c) { return ok(await sb.from('conteudo').upsert({ chave: c.chave, titulo: c.titulo, corpo: c.corpo, ordem: c.ordem ?? 0 }).select().single()); },
     async listRevisoes(fichaId) { return ok(await sb.from('revisoes').select('*, profiles(nome,email)').eq('ficha_id', fichaId).order('created_at', { ascending: false })); },
     async addRevisao(r) { return ok(await sb.from('revisoes').insert(r).select().single()); },
     async resolveRevisao(id, v) { return ok(await sb.from('revisoes').update({ resolvido: v }).eq('id', id)); },
@@ -137,6 +147,8 @@ function demoBackend() {
   const KEY = 'fiams-demo-db';
   const load = () => JSON.parse(LS.getItem(KEY) || '{"users":[],"imoveis":[],"fichas":[],"revisoes":[],"fotos":[]}');
   let db = load();
+  db.papeis = db.papeis || CONFIG.SUPERVISORES.map((email, i) => ({ email, role: i === 0 ? 'admin' : 'supervisor' }));
+  db.conteudo = db.conteudo || [];
   const save = () => { try { LS.setItem(KEY, JSON.stringify(db)); } catch (e) { alert('Armazenamento do navegador cheio (modo demonstração). Apague fotos de teste.'); } };
   let session = JSON.parse(LS.getItem('fiams-demo-session') || 'null');
   let authCb = () => {};
@@ -158,7 +170,7 @@ function demoBackend() {
       email = email.trim().toLowerCase();
       let u = db.users.find((x) => x.email === email);
       if (!u) {
-        u = { id: uid(), email, nome: '', role: CONFIG.SUPERVISORES.includes(email) ? 'supervisor' : 'aluno' };
+        u = { id: uid(), email, nome: '', role: db.papeis.find((p) => p.email === email)?.role || 'aluno' };
         db.users.push(u); save();
       }
       session = { user: { id: u.id, email } }; LS.setItem('fiams-demo-session', JSON.stringify(session)); authCb(session);
@@ -189,15 +201,36 @@ function demoBackend() {
     },
     async saveFicha(id, dados, progresso) {
       const f = db.fichas.find((x) => x.id === id);
-      if (!['rascunho', 'devolvida'].includes(f.status) && me().role !== 'supervisor') throw new Error('Ficha bloqueada para edição');
+      if (!['rascunho', 'devolvida'].includes(f.status) && !['supervisor', 'admin'].includes(me().role)) throw new Error('Ficha bloqueada para edição');
       Object.assign(f, { dados, progresso, updated_at: new Date().toISOString() }); save(); return { id, updated_at: f.updated_at };
     },
     async setStatus(id, status, progresso) {
       const f = db.fichas.find((x) => x.id === id); const now = new Date().toISOString();
-      if (['aprovada', 'devolvida'].includes(status) && me().role !== 'supervisor') throw new Error('Somente a supervisão pode aprovar ou devolver fichas.');
+      if (['aprovada', 'devolvida'].includes(status) && !['supervisor', 'admin'].includes(me().role)) throw new Error('Somente a supervisão pode aprovar ou devolver fichas.');
       f.status = status; if (progresso) f.progresso = progresso; f.updated_at = now;
       if (status === 'enviada') f.enviada_em = now; else if (status !== 'rascunho') f.revisada_em = now;
+      if (status !== 'aprovada') { f.publicada = false; f.publicada_em = null; }
       save(); return { id, status };
+    },
+    async setPublicada(id, v) {
+      const f = db.fichas.find((x) => x.id === id);
+      if (me().role !== 'admin') throw new Error('Somente a administração publica fichas no portal.');
+      if (v && f.status !== 'aprovada') throw new Error('Só fichas aprovadas podem ser publicadas.');
+      f.publicada = v; f.publicada_em = v ? new Date().toISOString() : null; save(); return { id, publicada: v, publicada_em: f.publicada_em };
+    },
+    async definirPapel(id, role) { const u = db.users.find((x) => x.id === id); await this.savePapel(u.email, role); },
+    async listPapeis() { return db.papeis.slice().sort((a, b) => a.email.localeCompare(b.email)); },
+    async savePapel(email, role) {
+      email = email.trim().toLowerCase();
+      const i = db.papeis.findIndex((p) => p.email === email); const row = { email, role, created_at: new Date().toISOString() };
+      if (i >= 0) db.papeis[i] = row; else db.papeis.push(row);
+      db.users.filter((u) => u.email === email).forEach((u) => { u.role = role; }); save(); return row;
+    },
+    async deletePapel(email) { db.papeis = db.papeis.filter((p) => p.email !== email); db.users.filter((u) => u.email === email).forEach((u) => { u.role = 'aluno'; }); save(); },
+    async listConteudo() { return db.conteudo.slice().sort((a, b) => (a.ordem || 0) - (b.ordem || 0)); },
+    async saveConteudo(c) {
+      const i = db.conteudo.findIndex((x) => x.chave === c.chave); const row = { ...c, updated_at: new Date().toISOString() };
+      if (i >= 0) db.conteudo[i] = row; else db.conteudo.push(row); save(); return row;
     },
     async deleteFicha(id) { db.fichas = db.fichas.filter((f) => f.id !== id); save(); },
     async allFichas(withDados = false) { return delay(db.fichas.map((f) => { const j = withJoin(f); if (!withDados) delete j.dados; return j; }).sort((a, b) => b.updated_at.localeCompare(a.updated_at))); },

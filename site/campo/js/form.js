@@ -1,5 +1,5 @@
 // FIAMS Campo · formulário da ficha
-import { html, useState, useRef, useEffect } from '../vendor/preact-htm.js';
+import { html, useState, useRef, useEffect } from '../../vendor/preact-htm.js';
 import { LISTS, TAG_INFO, hiddenReason, inCat, iim, iimPoints, isEmpty } from './logic.js';
 import { toast } from './ui.js';
 

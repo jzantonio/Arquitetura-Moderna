@@ -1,127 +1,90 @@
-# FIAMS campo
+# Arquitetura moderna de São Luís · plataforma do inventário
 
-Aplicativo web (celular, tablet e computador) para a coleta em campo da **Ficha de Inventário da Arquitetura Moderna de São Luís (FIAMS)**, recorte Monte Castelo, João Paulo e Filipinho.
+Plataforma do **Inventário da Arquitetura Moderna de São Luís (1930–1980)**, recorte Monte Castelo, João Paulo e Filipinho. Ela articula a coleta em campo, o banco de dados e a divulgação pública. Desenvolvida para o LUPA — Laboratório de Urbanismo, Paisagem, Arquitetura e Artes (Centro Universitário UNDB).
 
-Desenvolvido para o LUPA — Laboratório de Urbanismo, Paisagem, Arquitetura e Artes (Centro Universitário UNDB).
+**Endereço:** https://arquitetura-moderna-slz.netlify.app
+
+| Parte | Endereço | Para quem |
+|---|---|---|
+| Portal público | `/` | qualquer pessoa, sem login |
+| Área da equipe | `/campo/` | alunos, supervisão, pesquisadores convidados e administração (login com Google) |
+
+## Portal público
+
+- Página inicial com apresentação, números do inventário, mapa do acervo e fichas publicadas recentemente.
+- **Acervo:** os 86 imóveis em lista ou mapa, com busca e filtros por bairro e situação (inventariado, em estudo, ficha publicada).
+- **Página de cada imóvel:** dados do inventário, mapa, e, quando publicada, a ficha completa com fotos, destaques (datas, autoria, uso, conservação, IIM), declaração de significância, créditos e referência para citação.
+- **O projeto:** apresentação, metodologia e créditos. Os textos são editados pela administração, sem mexer em código.
+
+O público **nunca** vê: dados da visita de campo (V.1–V.6), entrevistas (seção 23), fontes orais (24.5), inscrição imobiliária (1.1.3), alertas internos, nem dados de cadastro das pessoas. A regra é imposta pelo banco (`supabase/03_plataforma.sql`), não só pela tela.
+
+## Área da equipe (app de campo)
 
 - Ficha completa, em sete etapas e na ordem numérica da FIAMS, com filtro por tipo de coleta: Campo, Documental ou Análise.
 - 86 imóveis do Inventário v4 já cadastrados. Cada ficha abre pré-preenchida, com os valores marcados como "do inventário".
-- Captura de coordenadas pelo GPS (latitude, longitude, UTM SIRGAS 2000), fotos pela câmera e cálculo automático do IIM (A1–A7).
-- Funciona sem internet: salva no aparelho e sincroniza quando a conexão volta.
-- Menu de **Supervisão** com:
-  - painel da turma com textos e gráficos;
-  - dados compilados por aluno, exportáveis em CSV;
-  - revisão de cada ficha, mostrando o que falta, e as ações comentar, devolver ou aprovar.
+- GPS (latitude, longitude, UTM SIRGAS 2000), fotos pela câmera e cálculo automático do IIM (A1–A7).
+- Funciona sem internet: salva no aparelho e sincroniza quando a conexão volta. Instalável no celular.
+
+### Perfis
+
+| Perfil | O que faz |
+|---|---|
+| Aluno | preenche as próprias fichas e envia à supervisão |
+| Supervisão | revisa, comenta, devolve e aprova fichas; painel da turma; exportação CSV |
+| Pesquisa (só leitura) | consulta todas as fichas, gráficos e exportações, sem editar |
+| Administração | tudo da supervisão, mais: **Publicação** (decide quais fichas aprovadas vão ao portal), **Pessoas** (atribui papéis, inclusive antes do primeiro acesso) e **Textos do portal** |
+
+Todos entram com conta Google (qualquer domínio). Quem não tem papel definido entra como aluno. Administração atual: `jose.lopes@undb.edu.br`; supervisão: `luis.longhi@undb.edu.br`.
+
+Fluxo de uma ficha: aluno preenche → envia → supervisão revisa (devolve ou aprova) → administração publica no portal. Se uma ficha publicada for devolvida, ela sai do portal sozinha.
 
 ---
 
 ## Estrutura
 
 ```
-index.html, sw.js, manifest.webmanifest   página, modo offline e instalação (PWA)
-css/app.css                               estilos
-js/config.js                              ← ÚNICO arquivo que você edita (chaves do Supabase)
-js/*.js                                   aplicativo
-data/seed.json                            86 imóveis pré-preenchidos (botão de carga na Supervisão)
-vendor/                                   bibliotecas (Preact, Supabase, Chart.js, Leaflet), sem depender de CDN
-supabase/01_schema.sql                    banco: tabelas, papéis e regras de segurança
-supabase/02_seed_imoveis.sql              carga dos 86 imóveis
-.github/workflows/pages.yml               publicação automática no GitHub Pages
+site/                         ← o que a Netlify publica
+  index.html, css/portal.css  portal público
+  js/portal.js                portal: páginas, mapa, acervo, imóvel
+  js/ficha-publica.js         leitura de uma ficha publicada
+  js/md.js                    formatação dos textos públicos
+  privacidade.html            política de privacidade
+  campo/                      área da equipe (PWA)
+    index.html, sw.js, manifest.webmanifest
+    js/config.js              ← chaves do Supabase (anon) e lista de supervisores do modo demonstração
+    js/*.js                   app: ficha, supervisão, administração (admin.js)
+    data/seed.json            86 imóveis pré-preenchidos (gerado)
+  vendor/, icons/             bibliotecas e ícones, sem CDN
+supabase/01_schema.sql        banco: tabelas e regras de segurança básicas
+supabase/02_seed_imoveis.sql  carga dos 86 imóveis (gerado)
+supabase/03_plataforma.sql    perfis, publicação, leitura pública e textos do portal
+tools/                        geradores em Python (ver tools/README.md)
+netlify.toml                  publicação na Netlify (pasta site/)
+github-pages/                 endereço antigo: redireciona para a Netlify
 ```
 
 ---
 
-## Instalação (uma vez, cerca de 20 minutos)
+## Serviços
 
-### 1. Criar o repositório no GitHub
+- **Netlify** — site `arquitetura-moderna-slz`. Publica a pasta `site/` (sem etapa de build).
+- **Supabase** — projeto *Arquitetura Moderna SLZ*. Banco, login e fotos.
+- **Google Cloud** — projeto *FIAMS campo*: login com Google (cliente OAuth "FIAMS campo (Supabase)", em produção).
+- **GitHub Pages** — só redireciona o endereço antigo (`jzantonio.github.io/Arquitetura-Moderna/`) para a Netlify.
 
-Pelo navegador, sem instalar nada:
+### Recriar do zero
 
-1. Em github.com, clique em **New repository**. Nome sugerido: `fiams-campo`. Não marque a opção de criar README.
-2. Na página do repositório vazio, clique em **uploading an existing file**.
-3. Arraste **todo o conteúdo** desta pasta, inclusive a pasta `.github`. Depois clique em **Commit changes**.
+1. **Supabase:** no SQL Editor, rode `supabase/01_schema.sql`, depois `02_seed_imoveis.sql`, depois `03_plataforma.sql`.
+2. **Login com Google:** no Google Cloud, crie um ID de cliente OAuth do tipo *Aplicativo da Web*, com o URI de redirecionamento `https://SEU-PROJETO.supabase.co/auth/v1/callback`. Tela de consentimento: tipo *Externo*, página inicial e política de privacidade apontando para o site, e **publicada** (em "Teste", só os testadores entram). No Supabase, em *Authentication → Sign In / Providers*, ative o Google com o ID e a chave secreta, e desative o Email.
+3. **Supabase → Authentication → URL Configuration:** Site URL `https://SEU-SITE/campo/`, e o mesmo endereço em *Redirect URLs*.
+4. **`site/campo/js/config.js`:** URL do projeto e chave *anon public* (pode ficar no repositório; quem protege os dados são as regras do banco). **Nunca** coloque a chave *service_role*.
+5. **Netlify:** crie o site e publique o repositório (o `netlify.toml` já indica a pasta `site/`).
 
-A pasta `.github` começa com ponto e costuma ficar oculta. No macOS, pressione Cmd+Shift+. no Finder para exibi-la. No Windows, marque "Itens ocultos" no Explorador. Se o upload não levar a pasta, crie o arquivo `.github/workflows/pages.yml` pelo botão **Add file → Create new file** e cole o conteúdo.
+## Atualizar
 
-Se preferir o terminal:
-
-```bash
-cd fiams-campo
-git init -b main
-git add .
-git commit -m "FIAMS campo: primeira versão"
-git remote add origin https://github.com/SEU-USUARIO/fiams-campo.git
-git push -u origin main
-```
-
-### 2. Criar o banco no Supabase
-
-1. Em supabase.com, crie uma conta e um **New project**. Região sugerida: South America (São Paulo).
-2. Abra **SQL Editor**, cole o conteúdo de `supabase/01_schema.sql` e clique em **Run**.
-3. Faça o mesmo com `supabase/02_seed_imoveis.sql`. Isso carrega os 86 imóveis.
-4. Em **Authentication → URL Configuration**:
-   - **Site URL:** o endereço do app (passo 4), por exemplo `https://SEU-USUARIO.github.io/fiams-campo/`
-   - **Redirect URLs:** adicione o mesmo endereço.
-5. Configure o login com Google (próxima seção). O cadastro por e-mail e senha não é usado.
-
-#### Login com Google
-
-O app só entra por conta Google, pessoal ou institucional (qualquer domínio). A regra é imposta pelo banco (`01_schema.sql`, gatilho `enforce_google`): qualquer cadastro que não venha do Google é recusado, mesmo que alguém tente burlar a tela. Qualquer pessoa com conta Google que tenha o link pode se cadastrar como aluno; o aluno só vê as próprias fichas, e só os e-mails da tabela `supervisores` têm acesso à supervisão.
-
-1. Em console.cloud.google.com, crie um projeto (ex.: "FIAMS campo") e abra **APIs e serviços → Tela de consentimento OAuth**. Tipo de usuário: **Externo** (o tipo "Interno" limitaria o acesso às contas de uma organização).
-2. Em **Credenciais → Criar credenciais → ID do cliente OAuth**, escolha **Aplicativo da Web**.
-3. Em **URIs de redirecionamento autorizados**, cole exatamente: `https://mbaojesxkkwnjpmjgcqj.supabase.co/auth/v1/callback`
-4. Copie o **ID do cliente** e a **chave secreta do cliente**.
-5. No Supabase, abra **Authentication → Sign In / Providers → Google**, ative, cole os dois valores e salve.
-6. Ainda em **Sign In / Providers**, desative **Email** (não é usado). Não é obrigatório, porque o banco já recusa.
-
-**Supervisores (acesso total):** `jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`. Ao entrar pela primeira vez com Google, a conta já nasce como supervisora. Para alterar a lista, edite a tabela `supervisores` no Supabase (Table Editor); vale para novas contas.
-
-### 3. Ligar o app ao banco
-
-> Neste pacote o `js/config.js` **já aponta para o projeto "Arquitetura Moderna SLZ"** (URL e chave anon preenchidas) e o esquema do passo 2 já foi aplicado nele. Só use as instruções abaixo se trocar de projeto.
-
-No Supabase, abra **Project Settings → API** e copie a **Project URL** e a chave **anon public**. No GitHub, abra `js/config.js`, clique no lápis (editar), cole os dois valores e faça o commit:
-
-```js
-SUPABASE_URL: 'https://xxxxxxxx.supabase.co',
-SUPABASE_ANON_KEY: 'eyJhbGciOi...',
-```
-
-A chave *anon* foi feita para ficar no navegador e pode ir para o repositório. Quem protege os dados são as regras de segurança criadas no passo 2. **Nunca** coloque a chave *service_role* neste arquivo.
-
-### 4. Publicar no GitHub Pages
-
-1. No repositório, abra **Settings → Pages**.
-2. Em **Source**, escolha **GitHub Actions**.
-3. Abra a aba **Actions**. A publicação roda sozinha a cada commit; se não começar, clique em *Publicar no GitHub Pages → Run workflow*.
-4. Em um ou dois minutos o endereço aparece em Settings → Pages: `https://SEU-USUARIO.github.io/fiams-campo/`.
-
-Volte ao passo 2.4 e confira se esse endereço está no Supabase.
-
-Observação: o GitHub Pages é gratuito para repositórios **públicos**. Para publicar a partir de um repositório **privado**, a conta precisa de GitHub Pro, que professores obtêm gratuitamente pelo GitHub Education. Outra opção é deixar o repositório privado e publicar pela Netlify, conectando o repositório ou arrastando a pasta em app.netlify.com/drop.
-
----
-
-## Uso
-
-**Supervisores** (`jose.lopes@undb.edu.br` e `luis.longhi@undb.edu.br`): entrem com **Entrar com Google**. O menu **Supervisão** aparece automaticamente.
-
-**Alunos:**
-1. Abrem o link no celular e tocam em **Entrar com Google**, com qualquer conta Google. No primeiro acesso informam nome e turma.
-2. Instalam o app: no Android, pelo menu ⋮ → *Instalar app*; no iPhone, pelo botão Compartilhar → *Adicionar à Tela de Início*.
-3. Em **Imóveis**, escolhem o bem e tocam em **Iniciar ficha**.
-
-**Sem internet:** tudo o que for preenchido fica guardado no aparelho, inclusive as fotos, e sobe sozinho quando a conexão voltar. O indicador no topo mostra *Salvo*, *Salvando…* ou *Offline*. Recomende abrir o app uma vez com internet antes de ir a campo.
-
-**Envio à supervisão:** exige apenas os 10 itens essenciais listados na tela *Revisar e enviar*. O resto pode ser completado depois.
-
-**Exportação:** em Supervisão → Alunos ou Inventário, gere o CSV com as fichas e os atributos da tabela SIG (seção 29).
-
-## Atualizar o app
-
-Edite os arquivos no GitHub (ou envie um novo commit). O GitHub Pages republica sozinho. Ao mudar arquivos do app, altere também a primeira linha de `sw.js` (`fiams-v1` → `fiams-v2`) para que os celulares baixem a nova versão.
+1. Edite os arquivos em `site/`. Se mudar algo da área da equipe, aumente a versão na primeira linha útil de `site/campo/sw.js` (`fiams-vN`) para os celulares baixarem a nova versão.
+2. Envie ao GitHub e publique na Netlify. Se o repositório estiver ligado à Netlify, a publicação é automática a cada envio.
 
 ## Modo demonstração
 
-Enquanto `js/config.js` estiver sem as chaves, o app funciona em modo demonstração, com os dados guardados só no navegador. Serve para testar e apresentar. Nesse modo, entrar com `jose.lopes@undb.edu.br` (sem senha) mostra o menu de supervisão.
+Com `SUPABASE_URL` e `SUPABASE_ANON_KEY` vazios em `site/campo/js/config.js`, a área da equipe funciona só no navegador, para testar e apresentar. Entrar com `jose.lopes@undb.edu.br` (sem senha) mostra a administração. O portal precisa do banco.
